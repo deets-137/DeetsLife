@@ -1,0 +1,2 @@
+# enrich_songs.py uses only the Python standard library (urllib, json, argparse).
+# This file is a placeholder for future dependencies (e.g. requests, pandas, music-tag).

@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "owner": "Aditya",
+    "schemaVersion": 1,
+    "note": "Sample shape only. You own this model — rename/add fields freely; the C# loader and enrich script adapt to it."
+  },
+  "eras": [
+    {
+      "id": "era-2019",
+      "title": "Placeholder Era One",
+      "start": "2019-01-01",
+      "end": "2020-12-31",
+      "blurb": "Short description of this chapter of life.",
+      "palette": ["#2b2d42", "#8d99ae", "#ef233c"]
+    },
+    {
+      "id": "era-now",
+      "title": "Placeholder Era Two",
+      "start": "2025-01-01",
+      "end": null,
+      "blurb": "The current chapter.",
+      "palette": ["#1a1a2e", "#e94560", "#0f3460"]
+    }
+  ],
+  "songs": [
+    {
+      "id": "song-0001",
+      "title": "Bohemian Rhapsody",
+      "artist": "Queen",
+      "album": "A Night at the Opera",
+      "eraId": "era-2019",
+      "dateAdded": "2019-03-14",
+      "songOfTheDay": null,
+      "previewUrl": null,
+      "artworkUrl": null,
+      "appleTrackId": null
+    },
+    {
+      "id": "song-0002",
+      "title": "Redbone",
+      "artist": "Childish Gambino",
+      "album": "Awaken, My Love!",
+      "eraId": "era-now",
+      "dateAdded": "2025-02-02",
+      "songOfTheDay": "2026-01-10",
+      "previewUrl": null,
+      "artworkUrl": null,
+      "appleTrackId": null
+    }
+  ]
+}
