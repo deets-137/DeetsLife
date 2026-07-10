@@ -1,20 +1,36 @@
 # Data model (Aditya owns this)
 
-**Being redesigned from scratch — nothing here is settled.** `data/library.sample.json`
-shows placeholder shape only. When the real model is defined, this file becomes its
-documentation and the Python tooling + GDScript loader get synced to it.
+> ## ⚠ Dormant
+>
+> This described the data for the music-museum direction. **Music is out of scope and the
+> vision is being reworked.** Nothing here is settled, and it may not survive at all — the
+> new direction may need no data model.
+>
+> Don't build against this file, and don't sync code to it. Ask Aditya what the game is
+> becoming first.
 
-Two plumbing contracts survive the redesign unless Aditya says otherwise:
+`data/library.sample.json` still shows the old placeholder shape (`{ meta, eras[],
+songs[] }`). It's kept because throwing it away costs nothing to reverse and keeping it
+records what the Godot loader was going to expect.
 
-1. **Enrichment** (`scripts/enrich_songs.py`) fills exactly three lookup fields per
-   song — `previewUrl`, `artworkUrl`, `appleTrackId` — and never touches authored data.
-2. **Audio pipeline** (`scripts/fetch_previews.py`) maps `songs[].id` →
-   `game/assets/audio/previews/<id>.ogg`, which is what the in-game jukebox loads.
+## What the old model was for
 
-Open questions for the redesign (from the Godot pivot):
+An era was a room. A room had songs. A song had a 30-second preview and cover artwork,
+both looked up from the iTunes Search API rather than authored by hand.
 
-- What does a **room** know? (era ↔ room 1:1? room size/layout data-driven or hand-built
-  per scene?)
-- Where do **photos** live in the model — per era, per song, or their own collection?
+Two plumbing contracts held it together. Both belonged to scripts that have since been
+deleted (`git checkout cff5a68 -- scripts/` restores them):
+
+1. **Enrichment** (`enrich_songs.py`) filled exactly three lookup fields per song —
+   `previewUrl`, `artworkUrl`, `appleTrackId` — and never touched authored data.
+2. **Audio pipeline** (`fetch_previews.py`) mapped `songs[].id` →
+   `game/assets/audio/previews/<id>.ogg`, which is what the in-game jukebox loaded.
+
+## Questions the rework has to answer anyway
+
+These outlived the music direction — any subject the game lands on will face most of them:
+
+- What does a **room** know? (Room size/layout data-driven, or hand-built per scene?)
+- Where do **photos** live in the model — per room, per item, or their own collection?
 - Gamification hooks — anything the model needs to carry (unlocks, collectibles, order)?
-- Per-era **palette** — keep it in the data (nice for UI theming) or purely an art concern?
+- Per-room **palette** — keep it in data (nice for UI theming) or purely an art concern?

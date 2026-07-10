@@ -1,62 +1,79 @@
 # DeetsLife build plan
 
-Vertical slice first — nothing scales until the full loop works once.
+Vertical slice first — nothing scales until one full interaction loop works.
 **Art, layout, palette, and the data model are Aditya's calls.**
 
-## Milestone 0 — Toolchain ✅ (scaffolded)
+> ## ⚠ The roadmap below is on hold
+>
+> Music is out of scope and the vision is being reworked. Milestones 1–6 were written for
+> the music-museum direction: eras, jukeboxes, 30s previews. **Don't build against them.**
+> They're kept as a record of what the plumbing was shaped for, not as a plan.
+>
+> The next real step is Aditya defining what the game is becoming. Once there's a subject,
+> Milestone 2 gets rewritten around whatever the new interaction loop turns out to be.
+
+## Milestone 0 — Toolchain ✅
 
 - [x] Godot 4 project (`game/`): isometric graybox room, walkable player, pixel-perfect
       rendering settings, input map.
-- [x] Placeholder art + Libresprite templates (`scripts/make_placeholder_art.py`).
-- [x] Audio pipeline: `enrich_songs.py` (iTunes lookup) + `fetch_previews.py`
-      (m4a→ogg for Godot).
-- [ ] Aditya: install Godot 4.4+, Libresprite, ffmpeg; open `game/`, walk the graybox.
+- [x] Dog: hand-drawn idles, walk strips and sit poses; breadcrumb follower (`dog.gd`).
+- [x] Hand-drawn player art + walk cycles.
+- [x] Placeholder art + Libresprite templates. *(Generator deleted; templates are
+      committed in `art/templates/`.)*
+- [x] Audio pipeline: iTunes lookup + m4a→ogg conversion. *(Deleted with `scripts/`.)*
 
-## Milestone 1 — Data model (NEXT)
+## Milestone 1 — What is this game? (NEXT)
 
-- [ ] Aditya defines the real model (eras, songs, photos, rooms, gamification hooks).
-- [ ] Sync `docs/DATA_MODEL.md`, `data/library.sample.json`, both Python scripts.
-- [ ] GDScript loader: parse `library.json` into typed objects at startup.
+- [ ] **Aditya defines the new direction.** Everything below is blocked on this.
+- [ ] Decide whether any data model is needed at all, and what it carries.
+- [ ] Rewrite Milestone 2 around the real interaction loop.
 
-## Milestone 2 — The vertical slice
+---
+
+*Everything past this line predates the rework. Kept for reference; not a plan.*
+
+## ~~Milestone 2 — The vertical slice~~ (void)
 
 One room → one jukebox → ~5 records → one photo → walk up → interact → hear the
 30s preview → see the photo.
 
-- [ ] Jukebox prop (placeholder sprite) with `interact` prompt when near.
+- [ ] Jukebox prop with `interact` prompt when near.
 - [ ] Record-selection UI (era's songs, artwork, titles).
 - [ ] `AudioStreamPlayer` playing the converted ogg previews.
-- [ ] "Open in Apple Music →" / "hear it on deets.solutions →" via `OS.shell_open()`.
+- [ ] "Open in Apple Music →" via `OS.shell_open()`.
 - [ ] Photo frame on the wall; interact opens the full-res photo overlay.
 
-## Milestone 3 — First real era room
+The photo-frame and `interact`-prompt work is the part most likely to survive the rework —
+neither depends on music.
 
-- [ ] Aditya art pass: floor/wall/prop tiles, jukebox sprite, caricature player
-      (idle poses done; walk-cycle strips are placeholders awaiting a redraw),
-      framed photos, era palette.
+## ~~Milestone 3 — First real era room~~ (deferred)
+
+- [ ] Aditya art pass: floor/wall/prop tiles, era palette, framed photos.
 - [ ] Real songs for one era enriched + converted end-to-end.
 
-## Milestone 4 — The museum
+## ~~Milestone 4 — The museum~~ (deferred)
 
-- [ ] Multiple era rooms; doorways with scene transitions.
-- [ ] Museum structure (hub hall? chronological corridor? Aditya's call).
-- [ ] Per-era ambience: palette, lighting/modulate, maybe era-specific props.
+- [ ] Multiple rooms; doorways with scene transitions.
+- [ ] Per-room ambience: palette, lighting/modulate, props.
 
-## Milestone 5 — Gamification + polish
+Room-to-room transitions are subject-agnostic and likely still wanted.
 
-- [ ] Collect/complete mechanics (find every record? unlock rooms?) — Aditya's design.
-- [ ] Jukebox glow reacting to audio (shader/modulate driven by playback).
-- [ ] Save state (visited rooms, played songs).
+## ~~Milestone 5 — Gamification + polish~~ (deferred)
+
+- [ ] Collect/complete mechanics — Aditya's design.
+- [ ] Save state (visited rooms).
 
 ## Milestone 6 — Ship
 
 - [ ] Export presets: Windows + macOS (+ itch.io page or R2-hosted web build, optional).
-- [ ] DeetsLife page on deets.solutions with Apple Music embeds per era.
 - [ ] Optional: recorded cinematic walkthrough.
 
 ## Deferred decisions
 
 - Web build hosting: Cloudflare Pages can't serve files >25 MiB, so a web export needs
   R2 (same account, free tier) or an itch.io iframe embed. Decide at Milestone 6.
-- Full-track playback (MusicKit, $99/yr dev account) — only ever viable on a web page,
-  not in Godot. Previews + outbound links cover the need for now.
+- **If music ever comes back:** previews only, never bundled full tracks. Godot cannot
+  decode AAC/`.m4a`, so Apple's preview URLs must be converted to Ogg Vorbis (ffmpeg).
+  Full-track playback needs MusicKit ($99/yr) and only ever works on a web page, not in
+  Godot. `git checkout cff5a68 -- scripts/` restores `enrich_songs.py` and
+  `fetch_previews.py`, which did exactly this.

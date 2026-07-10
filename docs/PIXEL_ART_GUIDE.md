@@ -28,24 +28,32 @@ How to hand-draw DeetsLife's world. Technique only — every style decision is A
   the dog has been standing still for 0.7s. Its **walk strips** are `dog_down_walk.png`,
   `dog_up_walk.png`, `dog_side_walk.png`: 4 frames of 32×32 = 128×32, same step-A →
   passing → step-B → passing order. Nine PNGs total.
+  All nine are **hand-drawn and final.**
   - Draw over `art/templates/dog_template_32x32.png` (center line + feet zone) and
-    `art/templates/dog_walk_strip_128x32.png` (the 4 cells).
+    `art/templates/dog_walk_strip_128x32.png` (the 4 cells). The sit poses have their own
+    templates — `art/templates/dog_sit_{side,down,up}_template.png` — each carrying the
+    bottom-center anchor, the row-31 ground line, the hip row, and a faded ghost of the
+    matching idle, so a sit lines up with the idle it cuts to.
   - `art/templates/dog_scale_reference.png` puts the player and the dog on one floor
     tile so you can judge proportions in context — the poodle stands about knee-high.
-  - **You only need to draw `dog_side` and `dog_down`.** `scripts/derive_dog_frames.py`
-    builds `dog_up` and all three walk strips out of those two, by moving your own
-    pixels — so the palette and style stay yours. Redraw either idle, re-run the script,
-    and every derived frame updates:
+  - `art/templates/dog_palette.png` is the dog's exact colors, one pixel each. Open it and
+    *Palette → Create palette from current sprite* to draw in-palette.
+  - **If you redraw `dog_side.png` or `dog_down.png`, restore the deriver first:**
 
     ```bash
+    git checkout cff5a68 -- scripts/
     python scripts/derive_dog_frames.py     # never writes dog_side.png / dog_down.png
     ```
 
-    It finds the legs on its own (the hip is the first row below which the silhouette
-    splits into two column runs), strides them in opposition for the side view, lifts one
-    paw per step for the front/back views, and bobs the body 1px on the passing frames —
-    stretching the legs a row so the paws stay planted on row 31. The only invented pixels
-    are the back view's tail nub and the erasing of the face.
+    `derive_dog_frames.py` rebuilds `dog_up` and all three walk strips out of those two
+    idles by moving your own pixels, so the palette and style stay yours. It finds the legs
+    on its own (the hip is the first row below which the silhouette splits into two column
+    runs), strides them in opposition for the side view, lifts one paw per step for the
+    front/back views, and bobs the body 1px on the passing frames — stretching the legs a
+    row so the paws stay planted on row 31. It skips any output you've hand-edited, and
+    names them, unless you pass `--force`.
+
+    **Commit your art before running it.** An uncommitted PNG it overwrites is gone.
 
 - **Props** (jukebox, benches, plants…): any size, but the *footprint* must read as one
   or more floor diamonds, and the sprite's bottom-center is its anchor (Y-sorting sorts
@@ -63,9 +71,10 @@ How to hand-draw DeetsLife's world. Technique only — every style decision is A
    anti-aliasing. Turn off any "smooth"/AA toggles.
 5. **Sketch rooms** over `art/templates/grid_guide_1280x640.png` to plan layouts before
    committing to tiles.
-6. **Save the working file** as `.aseprite` into `art/src/` (tracked in git), and
-   **export PNG** into `game/assets/tiles/` / `sprites/` / etc. Godot re-imports
-   automatically next time the editor gets focus.
+6. **Save the working file** as `.ase` beside the PNG it produces — the palettes and dog
+   sources live in `game/assets/sprites/` alongside their exports, since they're opened
+   constantly. Both are tracked in git. **Export PNG** into `game/assets/tiles/` /
+   `sprites/` / etc. Godot re-imports automatically next time the editor gets focus.
 
 ## Godot side (already configured — nothing to do)
 
@@ -89,19 +98,22 @@ How to hand-draw DeetsLife's world. Technique only — every style decision is A
 Your Lightroom-graded photos go in `art/photos/` (Git LFS). Two display patterns, both
 supported by the plumbing — mixing per-photo is fine:
 
-- **Dithered into the era's palette** for full pixel-art cohesion (Libresprite:
-  *Sprite → Color Mode → Indexed* with the era palette, or use its dithering on import).
+- **Dithered into the room's palette** for full pixel-art cohesion (Libresprite:
+  *Sprite → Color Mode → Indexed* with that palette, or use its dithering on import).
 - **Crisp photo in a pixel-art frame** — the frame sprite has a transparent window; the
   game letterboxes the photo behind it, and walking up + pressing interact opens the
   full-resolution photo as an overlay.
 
-## Regenerating the placeholders
+## Regenerating the placeholders (if needed)
+
+The generator was deleted once the art was final. The templates it made are committed in
+`art/templates/`, so you rarely want it back — mostly only to restyle the graybox tiles.
 
 ```bash
-cd scripts
-python make_placeholder_art.py   # tweak the color constants at the top first if you like
+git checkout cff5a68 -- scripts/
+python scripts/make_placeholder_art.py   # tweak the color constants at the top first
 ```
 
 **Existing files are never overwritten** — your hand-drawn art wins, and the script
 prints what it skipped. To rebuild one placeholder, delete that file and re-run. To
-rebuild everything (this *will* destroy hand-drawn art), pass `--force`.
+rebuild everything (this *will* destroy hand-drawn art), pass `--force`. Commit first.

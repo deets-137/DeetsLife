@@ -1,12 +1,14 @@
 # DeetsLife
 
-Interactive isometric pixel-art game — a walkable, gamified museum of the music of my
-life, organized by era. Jukeboxes are the interaction hubs; photos and other media
-layer in over time. Ships as desktop builds (Windows + macOS).
+Interactive isometric pixel-art game. Ships as desktop builds (Windows + macOS).
 
-- **Direction & art:** Aditya (style, rooms, palette, caricature sprite, data model).
-- **Tech:** Godot 4 + GDScript (game) ← Libresprite (pixel art), Lightroom (photos),
-  Python (data tooling), iTunes Search API (30s previews + artwork).
+> **The vision is being reworked.** It started as a walkable, gamified museum of the music
+> of my life, organized by era, with jukeboxes as the interaction hubs. **Music is out of
+> scope for now** and the new direction isn't settled. What holds: isometric pixel art,
+> hand-drawn, in a walkable Godot world.
+
+- **Direction & art:** Aditya (style, rooms, palette, caricature sprite).
+- **Tech:** Godot 4 + GDScript (game) ← Libresprite (pixel art), Lightroom (photos).
 
 See [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md) for the roadmap,
 [docs/PIXEL_ART_GUIDE.md](docs/PIXEL_ART_GUIDE.md) for the art workflow, and
@@ -14,19 +16,22 @@ See [docs/BUILD_PLAN.md](docs/BUILD_PLAN.md) for the roadmap,
 
 ## Quick start
 
-**Game:** install [Godot 4.4+](https://godotengine.org/download) (standard, not .NET),
-open the `game/` folder, hit F5. WASD/arrows to walk.
+Install [Godot 4.4+](https://godotengine.org/download) (standard, not .NET), open the
+`game/` folder, hit F5. WASD/arrows to walk. The dog follows you and sits when you stop.
 
-**Data tooling:**
+## Tooling
 
-```bash
-cd scripts
-python enrich_songs.py ../data/library.sample.json -o ../data/library.json
-python fetch_previews.py ../data/library.json    # needs ffmpeg on PATH
-```
+There isn't any right now. `scripts/` held the iTunes enrichment, the 30s-preview
+converter, the graybox art generator, and the dog frame-derivation tool. All four were
+deleted once the art was final and music went out of scope.
 
-**Placeholder art** (regenerate after tweaking colors):
+Restore them if needed — nothing was lost:
 
 ```bash
-python scripts/make_placeholder_art.py
+git checkout cff5a68 -- scripts/     # the last commit that still had them
+pip install -r scripts/requirements.txt
 ```
+
+Most likely reason to: `derive_dog_frames.py` is the only thing that rebuilds
+`dog_up.png` and the three dog walk strips from the two hand-drawn idles, so restore it
+before redrawing `dog_side.png` or `dog_down.png`.
