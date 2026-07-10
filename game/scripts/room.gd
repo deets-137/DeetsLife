@@ -1,37 +1,53 @@
 extends Node2D
-## Graybox era-room: builds a checkered isometric floor and NW/NE walls from
-## the placeholder tiles at runtime, and keeps the player on the floor.
+## Graybox multi-room map: builds every room's floor and NW/NE walls at runtime
+## from per-room assets in assets/rooms/<name>/, leaves door gaps in the walls,
+## and builds segment colliders along walls and floor boundaries so the player's
+## CharacterBody2D collides and slides normally (doors are the only way between rooms).
 ## Tile coords: u grows toward screen lower-right, v toward lower-left.
 ## World origin = center of tile (0, 0).
 
 const TILE_W := 128
 const TILE_H := 64
 const WALL_PX_H := 112  # wall texture height (80 face + 32 slope)
+const WALL_STRIPS := 4  # Y-sort slices per wall tile (see _add_wall)
 
-@export var room_width := 10  # tiles along u
-@export var room_depth := 8   # tiles along v
+## Each room draws from assets/rooms/<key>/: floor_a, floor_b, wall_nw, wall_ne.
+## Walls go on the NW (west-column) and NE (north-row) edges; SE/SW stay open
+## to the camera. The hall skips its NE wall — it opens straight into room D.
+const ROOMS := {
+	"entry": { "origin": Vector2i(0, 0), "size": Vector2i(5, 3) },
+	"room_a": { "origin": Vector2i(-3, -5), "size": Vector2i(5, 5) },
+	"room_b": { "origin": Vector2i(3, -5), "size": Vector2i(5, 5) },
+	"room_c": { "origin": Vector2i(-3, 0), "size": Vector2i(3, 3) },
+	"room_d": { "origin": Vector2i(0, -10), "size": Vector2i(5, 5) },
+	"hall": { "origin": Vector2i(2, -5), "size": Vector2i(1, 5), "no_ne_wall": true },
+}
 
-var _floor_a: Texture2D = preload("res://assets/tiles/floor_beige.png")
-var _floor_b: Texture2D = preload("res://assets/tiles/floor_beige_alt.png")
-var _wall_nw: Texture2D = preload("res://assets/tiles/wall_nw.png")
-var _wall_ne: Texture2D = preload("res://assets/tiles/wall_ne.png")
+## Wall tiles skipped to leave doorways (frames get hand-drawn art later).
+const DOOR_GAPS_NE := [Vector2i(0, 0), Vector2i(2, 0), Vector2i(4, 0)]  # entry → A, hall, B
+const DOOR_GAPS_NW := [Vector2i(0, 2)]  # entry → C
+
+const SPAWN_TILE := Vector2i(4, 2)  # bottom-right of the entry, on the mat
 
 @onready var _player: CharacterBody2D = $Player
+
+var _floor_root: Node2D
+var _walkable := {}     # Vector2i(u, v) -> true
+var _blocked_nw := {}   # Vector2i(u, v): wall between (u, v) and (u-1, v)
+var _blocked_ne := {}   # Vector2i(u, v): wall between (u, v) and (u, v-1)
 
 
 func _ready() -> void:
 	y_sort_enabled = true
-	_build_floor()
-	_build_walls()
-	_player.position = tile_to_world((room_width - 1) / 2.0, (room_depth - 1) / 2.0)
-
-
-func _physics_process(_delta: float) -> void:
-	# Graybox bounds: clamp the player to the floor diamond.
-	var t := world_to_tile(_player.position)
-	t.x = clampf(t.x, -0.1, room_width - 0.6)
-	t.y = clampf(t.y, -0.1, room_depth - 0.6)
-	_player.position = tile_to_world(t.x, t.y)
+	_floor_root = Node2D.new()
+	_floor_root.name = "Floor"
+	_floor_root.z_index = -10
+	add_child(_floor_root)
+	for room_name in ROOMS:
+		_build_room(room_name, ROOMS[room_name])
+	_build_mat()
+	_build_collision()
+	_player.position = tile_to_world(SPAWN_TILE.x, SPAWN_TILE.y)
 
 
 func tile_to_world(u: float, v: float) -> Vector2:
@@ -44,34 +60,105 @@ func world_to_tile(p: Vector2) -> Vector2:
 	return Vector2((x + y) * 0.5, (y - x) * 0.5)
 
 
-func _build_floor() -> void:
-	var floor_root := Node2D.new()
-	floor_root.name = "Floor"
-	floor_root.z_index = -10
-	add_child(floor_root)
-	for u in room_width:
-		for v in room_depth:
+func _build_room(room_name: String, r: Dictionary) -> void:
+	var o: Vector2i = r.origin
+	var sz: Vector2i = r.size
+	var dir := "res://assets/rooms/%s" % room_name
+	var floor_a: Texture2D = load(dir + "/floor_a.png")
+	var floor_b: Texture2D = load(dir + "/floor_b.png")
+	for u in range(o.x, o.x + sz.x):
+		for v in range(o.y, o.y + sz.y):
+			_walkable[Vector2i(u, v)] = true
 			var s := Sprite2D.new()
-			s.texture = _floor_a if (u + v) % 2 == 0 else _floor_b
+			s.texture = floor_a if (u + v) % 2 == 0 else floor_b
 			s.position = tile_to_world(u, v)
-			floor_root.add_child(s)
+			_floor_root.add_child(s)
+	var wall_nw: Texture2D = load(dir + "/wall_nw.png")
+	for v in range(o.y, o.y + sz.y):
+		var t := Vector2i(o.x, v)
+		if t in DOOR_GAPS_NW:
+			_maybe_add_door(dir + "/door_nw.png", t, true)
+			continue
+		_blocked_nw[t] = true
+		_add_wall(wall_nw, t, true)
+	if r.get("no_ne_wall", false):
+		return
+	var wall_ne: Texture2D = load(dir + "/wall_ne.png")
+	for u in range(o.x, o.x + sz.x):
+		var t := Vector2i(u, o.y)
+		if t in DOOR_GAPS_NE:
+			_maybe_add_door(dir + "/door_ne.png", t, false)
+			continue
+		_blocked_ne[t] = true
+		_add_wall(wall_ne, t, false)
 
 
-func _build_walls() -> void:
-	for u in room_width:
-		var c := tile_to_world(u, 0)
-		_add_wall(_wall_ne, c + Vector2(0, -16), Vector2(0, -(WALL_PX_H - 16)))
-	for v in room_depth:
-		var c := tile_to_world(0, v)
-		_add_wall(_wall_nw, c + Vector2(-32, -16), Vector2(-32, -(WALL_PX_H - 16)))
+func _build_mat() -> void:
+	# Added after the floors so it draws on top of them, still under the player.
+	var mat := Sprite2D.new()
+	mat.texture = load("res://assets/rooms/entry/mat.png")
+	mat.position = tile_to_world(SPAWN_TILE.x, SPAWN_TILE.y)
+	_floor_root.add_child(mat)
 
 
-func _add_wall(tex: Texture2D, pos: Vector2, off: Vector2) -> void:
-	# position = base midpoint of the wall (its Y-sort point); offset shifts the
-	# texture so it draws upward from that base.
-	var s := Sprite2D.new()
-	s.centered = false
-	s.texture = tex
-	s.position = pos
-	s.offset = off
-	add_child(s)
+func _maybe_add_door(path: String, t: Vector2i, nw: bool) -> void:
+	# Doorframe art is optional: drop door_nw.png / door_ne.png (64×112, transparent
+	# opening) into the room's folder and it renders in the wall gap. Never blocks.
+	if ResourceLoader.exists(path):
+		_add_wall(load(path), t, nw)
+
+
+func _add_wall(tex: Texture2D, t: Vector2i, nw: bool) -> void:
+	# Each wall tile is sliced into vertical strips, each Y-sorted at its own
+	# piece of the sloping base line. One sprite per tile would sort by the base
+	# midpoint, and the base spans 32px of Y — so anything standing near the
+	# high or low end of the slope could draw on the wrong side of the wall.
+	var c := tile_to_world(t.x, t.y)
+	var w := 64.0 / WALL_STRIPS
+	for i in WALL_STRIPS:
+		var strip_mid := i * w + w * 0.5  # x along the wall, from its left end
+		var s := Sprite2D.new()
+		s.centered = false
+		s.texture = tex
+		s.region_enabled = true
+		s.region_rect = Rect2(i * w, 0, w, WALL_PX_H)
+		if nw:  # base runs from (c.x-64, c.y) up to (c.x, c.y-32)
+			s.position = Vector2(c.x - 64 + i * w, c.y - strip_mid * 0.5)
+		else:   # base runs from (c.x, c.y-32) down to (c.x+64, c.y)
+			s.position = Vector2(c.x + i * w, c.y - 32 + strip_mid * 0.5)
+		s.offset = Vector2(0, (c.y - WALL_PX_H) - s.position.y)
+		add_child(s)
+
+
+func _build_collision() -> void:
+	# One StaticBody2D with a segment along every impassable tile edge: wall
+	# edges, plus the floor's outer boundary. Door gaps get no segment, so the
+	# player's feet box collides and slides with regular move_and_slide physics.
+	var body := StaticBody2D.new()
+	body.name = "WallColliders"
+	add_child(body)
+	for t: Vector2i in _walkable:
+		# NW edge of t (between t and its -u neighbor), and the same edge seen
+		# from the far side when the +u neighbor is off the map.
+		if _blocked_nw.has(t) or not _walkable.has(t + Vector2i(-1, 0)):
+			_add_edge_segment(body, t, true)
+		if not _walkable.has(t + Vector2i(1, 0)):
+			_add_edge_segment(body, t + Vector2i(1, 0), true)
+		# NE edge of t (between t and its -v neighbor), same trick for +v.
+		if _blocked_ne.has(t) or not _walkable.has(t + Vector2i(0, -1)):
+			_add_edge_segment(body, t, false)
+		if not _walkable.has(t + Vector2i(0, 1)):
+			_add_edge_segment(body, t + Vector2i(0, 1), false)
+
+
+func _add_edge_segment(body: StaticBody2D, t: Vector2i, nw: bool) -> void:
+	var shape := SegmentShape2D.new()
+	if nw:  # west edge of tile t: from its north corner to its west corner
+		shape.a = tile_to_world(t.x - 0.5, t.y - 0.5)
+		shape.b = tile_to_world(t.x - 0.5, t.y + 0.5)
+	else:   # north edge of tile t: from its north corner to its east corner
+		shape.a = tile_to_world(t.x - 0.5, t.y - 0.5)
+		shape.b = tile_to_world(t.x + 0.5, t.y - 0.5)
+	var cs := CollisionShape2D.new()
+	cs.shape = shape
+	body.add_child(cs)

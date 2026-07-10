@@ -18,6 +18,13 @@ An interactive isometric pixel-art game, built in **Godot 4**, shipping as deskt
   Libresprite (see docs/PIXEL_ART_GUIDE.md).
 - **Claude owns the technical plumbing.** Godot scenes/GDScript, exports, Git/LFS
   hygiene, debugging. When a task is code-related, expect to write it.
+- **The build loop that works:** Aditya directs the change (layout, dimensions, what
+  goes where) → Claude chats it through first, flagging geometry/tech consequences and
+  drawing a plan diagram when it's spatial → Claude builds the graybox plumbing and
+  verifies it **headless** (script-driven Godot tests + screenshots; never take over
+  Aditya's screen or keyboard) → Aditya playtests, then hand-draws and polishes over it.
+  Every placeholder is wired for drop-in replacement so his art lands with zero code
+  changes.
 
 When unsure whether something is an "art" call or a "tech" call, ask before deciding.
 
@@ -28,11 +35,20 @@ Don't plan around jukeboxes, eras, previews, or `library.json` until he says oth
 `data/library.sample.json` and `docs/DATA_MODEL.md` are dormant scaffolding from the old
 direction — do NOT treat them as settled or build against them.
 
-Ask what the game is becoming before writing anything that assumes a subject.
+The new direction is emerging through concrete build requests rather than a written
+spec — the multi-room map came first. Aditya directs each step; don't assume a subject
+or theme beyond what's actually been built.
 
-What's actually done and working: the isometric room (`main.tscn`), the walkable player,
-and the dog that trails the player along a breadcrumb path and sits when idle. All dog
-and player art is hand-drawn and final.
+What's actually done and working: the multi-room graybox map (`main.tscn`) — a 5×3
+entry room (spawn + welcome mat at its bottom-right) with three doors on its NE wall
+into two 5×5 rooms (A, B) and a 1×5 hall to a back 5×5 room (D), plus a door on the
+NW wall into a 3×3 room (C, flush with A); the walkable player (real collision:
+segment colliders along walls/floor edges + move_and_slide, camera follows); and the
+dog that trails the player along a
+breadcrumb path and sits when idle. All dog and player art is hand-drawn and final.
+Room floors/walls are graybox, one asset folder per room in `game/assets/rooms/<room>/`
+for Aditya to draw over (specs in docs/PIXEL_ART_GUIDE.md § Per-room assets). Room
+geometry lives in `ROOMS` in `game/scripts/room.gd`.
 
 ### The deleted tooling (restore if needed)
 
@@ -63,6 +79,14 @@ git checkout cff5a68 -- scripts/     # the last commit that still had it
   source of truth.
 - **Pixel-art rendering:** texture filter is Nearest project-wide; integer scaling
   only; sprites anchor at bottom-center for Y-sorting.
+- **Collision is real physics:** thin `SegmentShape2D` colliders along every wall and
+  floor-boundary edge (built at runtime in `room.gd::_build_collision`), player is a
+  `CharacterBody2D` feet-box using `move_and_slide`. Don't reintroduce point-based
+  position clamping — it clips.
+- **Wall Y-sorting:** each wall tile renders as 4 vertical 16px strips
+  (`WALL_STRIPS`), each sorted at its own point on the sloping base line. One sprite
+  per wall tile mis-sorts near the ends of the slope. Wall art stays 64×112 and slices
+  automatically.
 - **Art is drop-in replaceable:** same filename + size in `game/assets/` = zero code
   changes. Don't rename asset files casually.
 - **Version control:** Git + **Git LFS** for photos/audio/video only (see
@@ -95,11 +119,13 @@ DeetsLife/
     photos/              # Lightroom exports (Git LFS)
   game/                  # the Godot 4 project — open this folder in Godot
     project.godot
-    scenes/              # main.tscn (graybox room), player.tscn, dog.tscn
-    scripts/             # room.gd (iso math + room build), player.gd (movement),
-                         # dog.gd (breadcrumb follower)
+    scenes/              # main.tscn (graybox multi-room map), player.tscn, dog.tscn
+    scripts/             # room.gd (iso math + map build + walkability), player.gd
+                         # (movement), dog.gd (breadcrumb follower)
     assets/
-      tiles/             # graybox floor + walls, awaiting Aditya's art
+      rooms/             # per-room floors/walls/doorframes (entry, room_a–d, hall),
+                         # graybox awaiting Aditya's art; entry/ also has mat.png
+      tiles/             # obsolete graybox originals superseded by rooms/ — delete me
       sprites/           # hand-drawn player + dog PNGs, and the .ase working files
       audio/previews/    # empty; generated oggs were gitignored
 

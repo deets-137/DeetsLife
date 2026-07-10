@@ -22,9 +22,25 @@ Vertical slice first — nothing scales until one full interaction loop works.
       committed in `art/templates/`.)*
 - [x] Audio pipeline: iTunes lookup + m4a→ogg conversion. *(Deleted with `scripts/`.)*
 
-## Milestone 1 — What is this game? (NEXT)
+## Milestone 0.5 — Multi-room graybox map ✅ (July 2026)
 
-- [ ] **Aditya defines the new direction.** Everything below is blocked on this.
+Aditya directed the layout; built and verified headless.
+
+- [x] Six-space map, data-driven in `ROOMS` in `game/scripts/room.gd`: 5×3 entry
+      (welcome mat + spawn, bottom-right), doors at both ends of the NE wall into 5×5
+      rooms A and B, middle door onto a 1×5 hall to back room D (5×5), NW-wall door
+      into 3×3 room C (flush with A).
+- [x] Real collision: `SegmentShape2D` walls/boundaries + `move_and_slide` (replaced
+      point-checks that clipped).
+- [x] Wall Y-sort fix: walls render as 16px strips so sprites never draw through them.
+- [x] Per-room drop-in art folders `game/assets/rooms/<room>/`, incl. optional
+      doorframe slots (specs: PIXEL_ART_GUIDE § Per-room assets).
+- [ ] **Aditya art pass:** floors, walls, mat, doorframes, room by room.
+
+## Milestone 1 — What is this game? (ONGOING)
+
+- [ ] **Aditya defines the new direction** — arriving as concrete build requests
+      (the map above was the first) rather than a spec. Don't assume a subject.
 - [ ] Decide whether any data model is needed at all, and what it carries.
 - [ ] Rewrite Milestone 2 around the real interaction loop.
 
@@ -53,7 +69,9 @@ neither depends on music.
 
 ## ~~Milestone 4 — The museum~~ (deferred)
 
-- [ ] Multiple rooms; doorways with scene transitions.
+- [ ] Multiple rooms; doorways with scene transitions. *(A single-scene multi-room
+      version now exists — Milestone 0.5; transitions only matter if the map outgrows
+      one scene.)*
 - [ ] Per-room ambience: palette, lighting/modulate, props.
 
 Room-to-room transitions are subject-agnostic and likely still wanted.

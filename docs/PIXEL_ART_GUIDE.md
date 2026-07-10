@@ -10,8 +10,8 @@ How to hand-draw DeetsLife's world. Technique only — every style decision is A
   up/down**. Freehand lines at other ratios look jagged in iso — stick to 2:1 for
   anything that follows the floor.
 - **Walls are 64×112**: an 80px-tall face whose bottom edge follows one top edge of the
-  floor diamond (so the base slopes 2:1 across 64px = 32px of rise). Match
-  `game/assets/tiles/wall_nw.png` / `wall_ne.png` exactly and new walls drop in.
+  floor diamond (so the base slopes 2:1 across 64px = 32px of rise). Match any
+  `game/assets/rooms/<room>/wall_nw.png` / `wall_ne.png` exactly and new walls drop in.
 - **The player is 32×64**, feet at the bottom-center. Three facings: `player_down`
   (toward camera), `player_up` (away), `player_side` (LEFT — the game mirrors it for
   right). Keep the caricature's feet in the bottom ~4 rows so it sits on tiles correctly.
@@ -59,6 +59,24 @@ How to hand-draw DeetsLife's world. Technique only — every style decision is A
   or more floor diamonds, and the sprite's bottom-center is its anchor (Y-sorting sorts
   by the base, so a sprite whose base is baked too high will float).
 
+## Per-room assets
+
+Every room owns its art in `game/assets/rooms/<room>/` — `entry`, `room_a`, `room_b`,
+`room_c`, `room_d`, `hall`. All graybox placeholders until you draw them:
+
+- `floor_a.png` + `floor_b.png` (128×64 each) — laid in a checker pattern; export the
+  same image twice for a plain un-checkered floor.
+- `wall_nw.png` + `wall_ne.png` (64×112) — that room's walls. The hall has no
+  `wall_ne` (its north end opens straight into room D).
+- `entry/mat.png` (128×64) — the welcome mat under the spawn tile.
+- `door_nw.png` / `door_ne.png` (64×112, **optional**) — doorframe art. Doorways render
+  as bare wall gaps until this file exists in the folder of the room that owns the wall
+  (all four current doors are in the entry's walls, so: `entry/`). Leave the walkway
+  transparent; the frame never blocks movement.
+
+Same drop-in rule as everything else: overwrite a PNG keeping name + size, zero code
+changes. Room shapes/positions live in `ROOMS` in `game/scripts/room.gd`.
+
 ## Libresprite workflow
 
 1. **New file** at the exact target size (e.g. 128×64 for a floor tile). Color mode RGBA.
@@ -73,7 +91,7 @@ How to hand-draw DeetsLife's world. Technique only — every style decision is A
    committing to tiles.
 6. **Save the working file** as `.ase` beside the PNG it produces — the palettes and dog
    sources live in `game/assets/sprites/` alongside their exports, since they're opened
-   constantly. Both are tracked in git. **Export PNG** into `game/assets/tiles/` /
+   constantly. Both are tracked in git. **Export PNG** into `game/assets/rooms/<room>/` /
    `sprites/` / etc. Godot re-imports automatically next time the editor gets focus.
 
 ## Godot side (already configured — nothing to do)
