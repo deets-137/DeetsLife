@@ -1,41 +1,25 @@
-# ---- Unity ----
-unity/[Ll]ibrary/
-unity/[Tt]emp/
-unity/[Oo]bj/
-unity/[Bb]uild/
-unity/[Bb]uilds/
-unity/[Ll]ogs/
-unity/[Uu]ser[Ss]ettings/
-unity/[Mm]emoryCaptures/
-unity/[Rr]ecordings/
-*.csproj
-*.sln
-*.unityproj
-*.booproj
-*.pidb
-*.suo
-*.user
-*.userprefs
-*.apk
-*.aab
-
-# ---- Blender ----
-*.blend1
-*.blend2
-*.blend@
-*.autosave
+# ---- Godot ----
+game/.godot/
+game/export/
 
 # ---- Python ----
 scripts/.venv/
 __pycache__/
 *.pyc
-.cache_itunes.json
+scripts/.cache_itunes.json
+scripts/.cache_previews/
+
+# ---- Generated (regenerate from sample + tooling) ----
+data/library.json
+game/assets/audio/previews/*
+!game/assets/audio/previews/.gitkeep
+
+# ---- Libresprite / editor autosaves ----
+*.ase-autosave
+*.aseprite-autosave
 
 # ---- OS / editor ----
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
-
-# Generated enriched data (regenerate from sample + tooling). Keep the sample tracked.
-data/library.json

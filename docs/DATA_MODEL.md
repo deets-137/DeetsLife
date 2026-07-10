@@ -1,43 +1,20 @@
-# Data model (you own this)
+# Data model (Aditya owns this)
 
-This documents the *current sample shape*. It's a starting point — rename, add, or drop fields
-as your real Apple Music data dictates, then tell me the final names so I sync the Python tooling
-and the C# loader.
+**Being redesigned from scratch — nothing here is settled.** `data/library.sample.json`
+shows placeholder shape only. When the real model is defined, this file becomes its
+documentation and the Python tooling + GDScript loader get synced to it.
 
-Root is an **object** (not an array) so Unity's `JsonUtility` can parse it:
+Two plumbing contracts survive the redesign unless Aditya says otherwise:
 
-```jsonc
-{
-  "meta":  { ... },          // free-form
-  "eras":  [ Era,  ... ],
-  "songs": [ Song, ... ]
-}
-```
+1. **Enrichment** (`scripts/enrich_songs.py`) fills exactly three lookup fields per
+   song — `previewUrl`, `artworkUrl`, `appleTrackId` — and never touches authored data.
+2. **Audio pipeline** (`scripts/fetch_previews.py`) maps `songs[].id` →
+   `game/assets/audio/previews/<id>.ogg`, which is what the in-game jukebox loads.
 
-### Era
-| field   | type            | notes                                   |
-|---------|-----------------|-----------------------------------------|
-| id      | string          | stable key, referenced by songs.eraId   |
-| title   | string          | display name                            |
-| start   | string (date)   | ISO `YYYY-MM-DD`                        |
-| end     | string \| null  | null = ongoing                          |
-| blurb   | string          | short description                       |
-| palette | string[]        | hex colors; can drive per-era lighting  |
+Open questions for the redesign (from the Godot pivot):
 
-### Song
-| field        | type            | filled by        | notes                              |
-|--------------|-----------------|------------------|------------------------------------|
-| id           | string          | you              | stable key                         |
-| title        | string          | you              | required for lookup                |
-| artist       | string          | you              | required for lookup                |
-| album        | string          | you              |                                    |
-| eraId        | string          | you              | which era this belongs to          |
-| dateAdded    | string \| null  | you (Apple data) | ISO date                           |
-| songOfTheDay | string \| null  | you              | ISO date if it was a SOTD          |
-| previewUrl   | string \| null  | `enrich_songs.py`| 30s clip                           |
-| artworkUrl   | string \| null  | `enrich_songs.py`| 600x600                            |
-| appleTrackId | int \| null     | `enrich_songs.py`| iTunes/Apple track id              |
-
-**Contract:** the enrichment tool only fills `previewUrl`, `artworkUrl`, `appleTrackId`, and never
-overwrites your authored fields (unless `--force`). The C# field names in `unity-scripts/Song.cs`
-must match these keys exactly.
+- What does a **room** know? (era ↔ room 1:1? room size/layout data-driven or hand-built
+  per scene?)
+- Where do **photos** live in the model — per era, per song, or their own collection?
+- Gamification hooks — anything the model needs to carry (unlocks, collectibles, order)?
+- Per-era **palette** — keep it in the data (nice for UI theming) or purely an art concern?

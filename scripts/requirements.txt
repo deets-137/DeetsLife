@@ -1,2 +1,3 @@
-# enrich_songs.py uses only the Python standard library (urllib, json, argparse).
-# This file is a placeholder for future dependencies (e.g. requests, pandas, music-tag).
+# enrich_songs.py / fetch_previews.py use only the Python standard library.
+# make_placeholder_art.py needs Pillow.
+pillow
