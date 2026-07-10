@@ -125,7 +125,6 @@ DeetsLife/
     assets/
       rooms/             # per-room floors/walls/doorframes (entry, room_a–d, hall),
                          # graybox awaiting Aditya's art; entry/ also has mat.png
-      tiles/             # obsolete graybox originals superseded by rooms/ — delete me
       sprites/           # hand-drawn player + dog PNGs, and the .ase working files
       audio/previews/    # empty; generated oggs were gitignored
 
