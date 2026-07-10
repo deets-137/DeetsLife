@@ -77,6 +77,33 @@ Every room owns its art in `game/assets/rooms/<room>/` — `entry`, `room_a`, `r
 Same drop-in rule as everything else: overwrite a PNG keeping name + size, zero code
 changes. Room shapes/positions live in `ROOMS` in `game/scripts/room.gd`.
 
+## Props (`game/assets/props/`)
+
+Furniture and objects, shared across rooms. Bottom-center anchored at the south corner
+of their tile footprint, and — unlike tiles/walls — **canvas size is free**: the game
+reads the texture size at load, so redraw at whatever dimensions the design wants
+under the same filename.
+
+The mahjong set (room C, graybox until drawn):
+
+- `mahjong_table.png` — 1×1-tile footprint: the base diamond (128×64) fills the bottom
+  of the canvas, everything above is the table. Placeholder is 128×96. The tabletop
+  does NOT need readable mahjong tiles — the playable table view will be its own
+  zoomed-in scene later, with its own full-res art.
+- `mahjong_chair.png` — one stool, quarter-tile footprint (base diamond 64×32 at the
+  canvas bottom). Placeholder is 64×48. Drawn once and reused for all four seats, so
+  keep it rotationally symmetric; if it grows a directional back, flag it and it
+  becomes `_down`/`_up`/`_side` variants like the player facings.
+
+Colliders are deliberately smaller than the sprites (the stool's legs, an inset table
+diamond) and live in `PROPS` in `room.gd` — art changes never touch them.
+
+**Planned — player sit poses:** when the next batch of player sprites gets drawn
+(more characters than just the current Aditya caricature), include `sit_down` /
+`sit_up` / `sit_side` per character, same idea as the dog's sit poses. That's the
+art that unlocks sitting at the stools: the game disables the stool's collider and
+snaps the seated sprite onto it.
+
 ## Libresprite workflow
 
 1. **New file** at the exact target size (e.g. 128×64 for a floor tile). Color mode RGBA.

@@ -37,6 +37,20 @@ Aditya directed the layout; built and verified headless.
       doorframe slots (specs: PIXEL_ART_GUIDE § Per-room assets).
 - [ ] **Aditya art pass:** floors, walls, mat, doorframes, room by room.
 
+## Milestone 0.6 — Mahjong corner in room C 🚧
+
+A 1×1 table on C's center tile, four quarter-tile stools tucked to its sides with
+leg-sized colliders so the room stays walkable. Data-driven in `PROPS` in `room.gd`;
+art contract in PIXEL_ART_GUIDE § Props.
+
+- [x] Table + stools placed, collided, Y-sorted; walk lanes verified headless.
+- [ ] Aditya: draw `mahjong_table.png` + `mahjong_chair.png` over the graybox.
+- [ ] Sitting: needs player sit poses (`sit_down/up/side`) — draw them with the next
+      player-sprite batch (more characters than just Aditya's likeness), then wire
+      interact-to-sit: stool collider off, sprite snaps to the seat.
+- [ ] The game itself: interact at the table → camera zooms in and a tabletop scene
+      opens (mahjong board + 4 action buttons). Separate art project; not started.
+
 ## Milestone 1 — What is this game? (ONGOING)
 
 - [ ] **Aditya defines the new direction** — arriving as concrete build requests

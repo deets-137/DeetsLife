@@ -29,6 +29,20 @@ const DOOR_GAPS_NW := [Vector2i(0, 2)]  # entry → C
 
 const SPAWN_TILE := Vector2i(4, 2)  # bottom-right of the entry, on the mat
 
+## Props: sprite from assets/props/<tex>.png, bottom-center anchored at the south
+## corner of a square footprint centered on "at" (fractional tile coords are fine —
+## the stools sit tucked toward the table, a quarter tile off their tile's center).
+## "half" = footprint half-extent in tiles; "collider_half" = the solid diamond
+## (smaller than the sprite, so walk lanes past a prop stay comfortable).
+## The stools' colliders will toggle off when sitting gets built.
+const PROPS := [
+	{ "tex": "mahjong_table", "at": Vector2(-2.0, 1.0), "half": 0.5, "collider_half": 0.45 },
+	{ "tex": "mahjong_chair", "at": Vector2(-2.0, 0.25), "half": 0.25, "collider_half": 0.175 },  # NE seat
+	{ "tex": "mahjong_chair", "at": Vector2(-2.0, 1.75), "half": 0.25, "collider_half": 0.175 },  # SW seat
+	{ "tex": "mahjong_chair", "at": Vector2(-2.75, 1.0), "half": 0.25, "collider_half": 0.175 },  # NW seat
+	{ "tex": "mahjong_chair", "at": Vector2(-1.25, 1.0), "half": 0.25, "collider_half": 0.175 },  # SE seat
+]
+
 @onready var _player: CharacterBody2D = $Player
 
 var _floor_root: Node2D
@@ -46,6 +60,7 @@ func _ready() -> void:
 	for room_name in ROOMS:
 		_build_room(room_name, ROOMS[room_name])
 	_build_mat()
+	_build_props()
 	_build_collision()
 	_player.position = tile_to_world(SPAWN_TILE.x, SPAWN_TILE.y)
 
@@ -128,6 +143,32 @@ func _add_wall(tex: Texture2D, t: Vector2i, nw: bool) -> void:
 			s.position = Vector2(c.x + i * w, c.y - 32 + strip_mid * 0.5)
 		s.offset = Vector2(0, (c.y - WALL_PX_H) - s.position.y)
 		add_child(s)
+
+
+func _build_props() -> void:
+	for p in PROPS:
+		var tex: Texture2D = load("res://assets/props/%s.png" % p.tex)
+		# Anchor bottom-center at the footprint's south corner (its Y-sort point);
+		# size comes from the texture, so redrawn art can be any canvas size.
+		var base: Vector2 = tile_to_world(p.at.x, p.at.y) + Vector2(0, p.half * TILE_H)
+		var s := Sprite2D.new()
+		s.centered = false
+		s.texture = tex
+		s.position = base
+		s.offset = Vector2(-tex.get_width() / 2.0, -float(tex.get_height()))
+		add_child(s)
+		var body := StaticBody2D.new()
+		body.position = tile_to_world(p.at.x, p.at.y)
+		var shape := ConvexPolygonShape2D.new()
+		var ch: float = p.collider_half
+		shape.points = PackedVector2Array([
+			Vector2(0, -TILE_H * ch), Vector2(TILE_W * ch, 0),
+			Vector2(0, TILE_H * ch), Vector2(-TILE_W * ch, 0),
+		])
+		var cs := CollisionShape2D.new()
+		cs.shape = shape
+		body.add_child(cs)
+		add_child(body)
 
 
 func _build_collision() -> void:

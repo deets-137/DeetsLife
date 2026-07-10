@@ -50,6 +50,12 @@ Room floors/walls are graybox, one asset folder per room in `game/assets/rooms/<
 for Aditya to draw over (specs in docs/PIXEL_ART_GUIDE.md § Per-room assets). Room
 geometry lives in `ROOMS` in `game/scripts/room.gd`.
 
+Room C is becoming the mahjong corner: a 1×1 table + four quarter-tile stools
+(`PROPS` in room.gd, graybox art in `game/assets/props/`, plan in BUILD_PLAN
+§ Milestone 0.6). Sitting waits on player sit poses, which Aditya will draw with the
+next player-sprite batch; the mahjong game itself (zoomed tabletop scene + 4 buttons)
+is designed-but-not-started.
+
 ### The deleted tooling (restore if needed)
 
 `scripts/` was removed once the art was final. Everything is recoverable:
@@ -125,6 +131,7 @@ DeetsLife/
     assets/
       rooms/             # per-room floors/walls/doorframes (entry, room_a–d, hall),
                          # graybox awaiting Aditya's art; entry/ also has mat.png
+      props/             # furniture (mahjong table + stool), graybox awaiting art
       sprites/           # hand-drawn player + dog PNGs, and the .ase working files
       audio/previews/    # empty; generated oggs were gitignored
 
