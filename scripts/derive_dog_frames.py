@@ -13,16 +13,21 @@ Writes:
     game/assets/sprites/dog_side_walk.png  128x32  (4 frames)
     game/assets/sprites/dog_down_walk.png  128x32
     game/assets/sprites/dog_up_walk.png    128x32
+    game/assets/sprites/dog_sit_side.png   32x32  } starting points for hand-drawing:
+    game/assets/sprites/dog_sit_down.png   32x32  } a folded hind leg is not something
+    game/assets/sprites/dog_sit_up.png     32x32  } you get by relocating pixels
     art/templates/dog_sit_{side,down,up}_template.png   drawing aids for the sit poses
     art/templates/dog_palette.png                       the dog's colors, one px each
 
-The three sit poses (dog_sit_side/down/up.png) are hand-drawn and this script never
-touches them — a folded hind leg isn't something you get by relocating pixels. What it
-does instead is emit a template per facing carrying the anchor, ground line, hip row and
-a ghost of the idle, so a sit drawn over it lines up with the idle it cuts to.
+Each template carries the anchor, ground line, hip row and a ghost of the idle, so a sit
+drawn over it lines up with the idle it cuts to.
 
 Re-run this whenever you redraw dog_side.png or dog_down.png. It re-derives everything.
-Hand-drew one of the outputs yourself? Pass --keep to skip files that already differ.
+
+Hand-edited outputs are NEVER overwritten. Before writing, each output is compared pixel
+for pixel against the file already on disk; anything that differs was touched by a human,
+so it is skipped and named in the summary. Pass --force to overwrite them anyway, or
+--only {frames,sits} to regenerate just one half.
 
 How the walk works (frame order: step-A, passing, step-B, passing — per PIXEL_ART_GUIDE):
   * Legs are found automatically: the first row below which the silhouette splits into
@@ -107,6 +112,16 @@ def _leg_spans(img, hip):
 
 def _part(img, box):
     return img.crop(box)
+
+
+def _col_bottom(px, x, ymax=CELL):
+    ys = [y for y in range(min(ymax, CELL)) if px[x, y][3]]
+    return max(ys) if ys else None
+
+
+def _row_span(px, y):
+    xs = [x for x in range(CELL) if px[x, y][3]]
+    return (min(xs), max(xs)) if xs else None
 
 
 # ---- frame assembly ----
@@ -202,7 +217,102 @@ def make_up(down):
     return up
 
 
-# ---- sit templates (drawing aids; the sit sprites themselves are hand-drawn) ----
+# ---- sit poses ----
+# Starting points, not finished art: a folded hind leg isn't something you get by
+# relocating pixels. Draw over them, or over the matching art/templates/dog_sit_*.
+
+CHEST_LIFT = 1     # px the chest rises as the dog settles back
+SHEAR = 3          # cols of rear body per 1px the topline drops toward the rump
+HAUNCH_W = 5       # px a haunch bulges out past the chest in the down/up views
+HAUNCH_TOP = 20    # row the haunches start on
+
+
+def make_sit_side(img):
+    """Chest up, topline sloping back, rump on the floor, hind leg folded under."""
+    base, shadow = _fur_tones(img)
+    hip = _hip_row(img)
+    legs = _leg_spans(img, hip)
+    if len(legs) != 2:
+        raise SystemExit(f"side sit: expected 2 legs below row {hip}, found {len(legs)}")
+    front, hind = legs
+    split = (front[1] + hind[0]) // 2 + 1     # where the body stops being chest
+    src = img.load()
+
+    out = Image.new("RGBA", (CELL, CELL), TRANSPARENT)
+    px = out.load()
+
+    # Rear of the body, sheared so the topline slopes down instead of stepping.
+    for x in range(split, CELL):
+        dy = min((x - split) // SHEAR, 3)
+        for y in range(hip):
+            if src[x, y][3] and y + dy < CELL:
+                px[x, y + dy] = src[x, y]
+
+    out.alpha_composite(_part(img, (0, CHEST_LIFT, split, hip)), (0, 0))
+
+    for x in range(front[0], front[1] + 1):   # front leg stays planted on row 31
+        for y in range(hip, CELL):
+            if src[x, y][3]:
+                px[x, y] = src[x, y]
+        if src[x, hip][3]:
+            for k in range(1, CHEST_LIFT + 1):
+                px[x, hip - k] = src[x, hip]
+
+    # Haunch: carry the rump down to the floor, rounding both ends of its base.
+    rump_r = max(x for x in range(split, CELL) if _col_bottom(px, x) is not None)
+    for x in range(split, rump_r + 1):
+        yb = _col_bottom(px, x, hip + 5)
+        if yb is None:
+            continue
+        inset = max(0, 2 - (x - split), 2 - (rump_r - x))
+        for y in range(yb + 1, CELL - inset):
+            px[x, y] = base
+        for y in range(max(yb + 1, CELL - 2 - inset), CELL - inset):
+            px[x, y] = shadow
+
+    for x in range(split - 3, split + 1):     # hind paw peeking out from under the haunch
+        for y in (CELL - 2, CELL - 1):
+            px[x, y] = shadow
+    print(f"  sit_side: split=x{split} rump reaches x{rump_r}")
+    return out
+
+
+def make_sit_facing(img, label, seat_rump):
+    """Haunches spread either side of the chest. The back view also seats its rump."""
+    base, shadow = _fur_tones(img)
+    hip = _hip_row(img)
+    out = img.copy()
+    px = out.load()
+    chest = _row_span(px, hip - 1)
+
+    if seat_rump:
+        for x in range(chest[0], chest[1] + 1):
+            for y in range(hip, CELL):
+                px[x, y] = base
+
+    for sign, edge in ((-1, chest[0]), (+1, chest[1])):
+        for i in range(HAUNCH_W):
+            x = edge + sign * i
+            if not 0 <= x < CELL:
+                continue
+            top = HAUNCH_TOP + max(0, i - (HAUNCH_W - 3))   # round the outer top
+            bot = CELL - max(0, i - (HAUNCH_W - 2))         # and the outer base
+            for y in range(top, bot):
+                px[x, y] = base
+
+    lo = max(0, chest[0] - (HAUNCH_W - 1))
+    hi = min(CELL - 1, chest[1] + (HAUNCH_W - 1))
+    for x in range(lo, hi + 1):                             # contact shadow along the base
+        yb = _col_bottom(px, x)
+        if yb is None:
+            continue
+        for y in range(max(hip, yb - 1), yb + 1):
+            px[x, y] = shadow
+    print(f"  sit_{label}: chest=x{chest[0]}-{chest[1]} haunches to x{lo}-{hi}")
+    return out
+
+
+# ---- sit templates (drawing aids for redrawing the sits by hand) ----
 
 GHOST_ALPHA = 72
 FEET_ZONE = (200, 120, 90, 55)    # bottom 4 rows: where paws/rump may touch
@@ -257,15 +367,37 @@ def make_palette_strip(*imgs):
     return strip, seen
 
 
+def _is_hand_touched(img, path):
+    """True if the file on disk isn't pixel-for-pixel what we're about to write.
+
+    A file we generated round-trips exactly, so any difference means a human edited it.
+    Compares pixels, not bytes: Libresprite and Pillow encode the same image to
+    different PNGs, and a byte compare would call every output hand-edited.
+    """
+    if not path.exists():
+        return False
+    try:
+        on_disk = Image.open(path).convert("RGBA")
+    except OSError:
+        return True   # unreadable: assume precious, make the human look
+    return on_disk.size != img.size or on_disk.tobytes() != img.convert("RGBA").tobytes()
+
+
 def main():
-    ap = argparse.ArgumentParser(description="Derive the dog's back view + walk strips.")
-    ap.add_argument("--keep", action="store_true", help="skip outputs that already exist")
+    ap = argparse.ArgumentParser(description="Derive the dog's back view, walk strips and sits.")
+    ap.add_argument("--force", action="store_true",
+                    help="overwrite hand-edited outputs (DESTROYS hand-drawn art)")
+    ap.add_argument("--only", choices=("all", "frames", "sits"), default="all",
+                    help="frames = back view + walk strips; sits = the three sit poses")
     args = ap.parse_args()
+
+    protected = []
 
     def write(img, name):
         path = SPRITES / name
-        if args.keep and path.exists():
-            print(f"  skip (exists): {name}")
+        if _is_hand_touched(img, path) and not args.force:
+            protected.append(name)
+            print(f"  SKIP (hand-edited): {name}")
             return
         img.save(path)
         print(f"  wrote: {name}")
@@ -276,11 +408,18 @@ def main():
         if src.size != (CELL, CELL):
             raise SystemExit(f"{name} must be {CELL}x{CELL}, got {src.size}")
 
-    up = make_up(down)
-    write(up, "dog_up.png")
-    write(make_side_walk(side), "dog_side_walk.png")
-    write(make_facing_walk(down, "down"), "dog_down_walk.png")
-    write(make_facing_walk(up, "up"), "dog_up_walk.png")
+    up = make_up(down)   # needed by both modes; only written as part of the frames
+
+    if args.only in ("all", "frames"):
+        write(up, "dog_up.png")
+        write(make_side_walk(side), "dog_side_walk.png")
+        write(make_facing_walk(down, "down"), "dog_down_walk.png")
+        write(make_facing_walk(up, "up"), "dog_up_walk.png")
+
+    if args.only in ("all", "sits"):
+        write(make_sit_side(side), "dog_sit_side.png")
+        write(make_sit_facing(down, "down", seat_rump=False), "dog_sit_down.png")
+        write(make_sit_facing(up, "up", seat_rump=True), "dog_sit_up.png")
 
     TEMPLATES.mkdir(parents=True, exist_ok=True)
     for idle, facing in ((side, "side"), (down, "down"), (up, "up")):
@@ -292,7 +431,9 @@ def main():
     print(f"  wrote: templates/dog_palette.png ({len(tones)} colors)")
 
     print("Derived from dog_side.png + dog_down.png — those two were not modified.")
-    print("dog_sit_*.png are hand-drawn and are never written by this script.")
+    if protected:
+        print(f"\nLeft {len(protected)} hand-edited file(s) alone: {', '.join(protected)}")
+        print("Pass --force to overwrite them. Commit first — this is not undoable.")
 
 
 if __name__ == "__main__":

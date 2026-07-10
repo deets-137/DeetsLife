@@ -13,11 +13,18 @@ Outputs (all paths relative to the repo root):
     art/templates/tile_template_128x64.png   blank diamond outline to draw inside
     art/templates/grid_guide_1280x640.png    isometric grid to sketch rooms over
     art/templates/palette_deetslife.png      starter palette strip (importable in Libresprite)
+    art/templates/dog_template_32x32.png     dog canvas: center line, ground line, feet zone
+    art/templates/dog_walk_strip_128x32.png  4-cell walk-strip guide
+    art/templates/dog_scale_reference.png    player + dog standing on one floor tile
 
 All placeholder art is meant to be REPLACED by Aditya's hand-drawn work — same sizes,
 same filenames, drop-in. Tweak the colors below and re-run if you want different graybox vibes.
+
+Existing files are NEVER overwritten (hand-drawn art wins). Pass --force to regenerate
+them anyway, or delete the specific file you want rebuilt.
 """
 
+import argparse
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -49,7 +56,21 @@ PANTS = (52, 48, 66, 255)
 PANTS_DARK = (42, 38, 54, 255)
 SHOE = (30, 27, 38, 255)
 
+# No dog colors here. The dog is hand-drawn; derive_dog_frames.py reads its palette
+# straight out of that art into art/templates/dog_palette.png.
+
 TRANSPARENT = (0, 0, 0, 0)
+
+FORCE = False
+
+
+def _write(img, path):
+    """Save unless the file already exists — hand-drawn art must never be clobbered."""
+    if path.exists() and not FORCE:
+        print(f"  skip (exists): {path.relative_to(REPO)}")
+        return
+    img.save(path)
+    print(f"  wrote: {path.relative_to(REPO)}")
 
 
 def diamond_rows(w=TILE_W, h=TILE_H):
@@ -66,7 +87,7 @@ def make_floor(fill, path):
     for y, x0, x1 in diamond_rows():
         for x in range(x0, x1 + 1):
             px[x, y] = BEIGE_EDGE if x < x0 + 2 or x > x1 - 2 else fill
-    img.save(path)
+    _write(img, path)
 
 
 def make_wall(nw, path):
@@ -83,7 +104,7 @@ def make_wall(nw, path):
                 px[x, y] = GREEN_DARK
             else:
                 px[x, y] = face
-    img.save(path)
+    _write(img, path)
 
 
 def _scale2x(img):
@@ -109,7 +130,7 @@ def make_player_down(path):
     d.rectangle([9, 20, 10, 26], fill=PANTS)
     d.rectangle([4, 27, 6, 28], fill=SHOE)                       # shoes
     d.rectangle([9, 27, 11, 28], fill=SHOE)
-    _scale2x(img).save(path)
+    _write(_scale2x(img), path)
 
 
 def make_player_up(path):
@@ -126,7 +147,7 @@ def make_player_up(path):
     d.rectangle([9, 20, 10, 26], fill=PANTS)
     d.rectangle([4, 27, 6, 28], fill=SHOE)
     d.rectangle([9, 27, 11, 28], fill=SHOE)
-    _scale2x(img).save(path)
+    _write(_scale2x(img), path)
 
 
 def make_player_side(path):
@@ -146,7 +167,50 @@ def make_player_side(path):
     d.rectangle([6, 18, 7, 26], fill=PANTS)                      # near leg
     d.rectangle([4, 27, 7, 28], fill=SHOE)                       # toe points left
     d.rectangle([8, 27, 9, 28], fill=SHOE)
-    _scale2x(img).save(path)
+    _write(_scale2x(img), path)
+
+
+
+def _dog_guides(img, cells=1):
+    """Border, 2px pixel-grid, center column and ground/feet zone per cell."""
+    d = ImageDraw.Draw(img)
+    grid = (120, 120, 132, 26)
+    center = (90, 150, 200, 90)
+    ground = (200, 120, 90, 70)
+    outline = (40, 40, 48, 200)
+    for x in range(0, img.width, 2):
+        d.line([(x, 0), (x, img.height - 1)], fill=grid)
+    for y in range(0, img.height, 2):
+        d.line([(0, y), (img.width - 1, y)], fill=grid)
+    for c in range(cells):
+        ox = c * 32
+        d.rectangle([ox, 28, ox + 31, 31], fill=ground)     # feet zone: bottom 4 rows
+        d.rectangle([ox + 15, 0, ox + 16, 31], fill=center)  # bottom-center anchor
+        d.rectangle([ox, 0, ox + 31, 31], outline=outline)
+
+
+def make_dog_template(path):
+    img = Image.new("RGBA", (32, 32), TRANSPARENT)
+    _dog_guides(img)
+    _write(img, path)
+
+
+def make_dog_strip_template(path):
+    img = Image.new("RGBA", (128, 32), TRANSPARENT)
+    _dog_guides(img, cells=4)
+    _write(img, path)
+
+
+def make_dog_scale_reference(path):
+    """Player and dog standing on one floor tile, so proportions are judged in context."""
+    floor = Image.open(TILES / "floor_beige.png").convert("RGBA")
+    player = Image.open(SPRITES / "player_down.png").convert("RGBA")
+    dog = Image.open(SPRITES / "dog_side.png").convert("RGBA")
+    img = Image.new("RGBA", (192, 112), (32, 32, 38, 255))
+    img.alpha_composite(floor, (32, 48))          # tile center lands at (96, 80)
+    img.alpha_composite(player, (64, 16))         # feet at (80, 80)
+    img.alpha_composite(dog, (100, 52))           # paws at (116, 84), a step behind
+    _write(img, path)
 
 
 def make_tile_template(path):
@@ -166,7 +230,7 @@ def make_tile_template(path):
         if y in (31, 32):
             for x in range(x0 + 2, x1 - 1):
                 px[x, y] = guide
-    img.save(path)
+    _write(img, path)
 
 
 def make_grid_guide(path):
@@ -190,7 +254,7 @@ def make_grid_guide(path):
     for y, x0, x1 in diamond_rows():
         for x in range(x0 + 2, x1 - 1):
             px[ox + x, oy + y] = (216, 200, 168, 90)
-    img.save(path)
+    _write(img, path)
 
 
 def make_palette(path):
@@ -201,10 +265,16 @@ def make_palette(path):
     d = ImageDraw.Draw(img)
     for i, c in enumerate(colors):
         d.rectangle([i * 32, 0, i * 32 + 31, 31], fill=c)
-    img.save(path)
+    _write(img, path)
 
 
 def main():
+    global FORCE
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[1])
+    ap.add_argument("--force", action="store_true",
+                    help="overwrite existing files (DESTROYS hand-drawn art)")
+    FORCE = ap.parse_args().force
+
     for folder in (TILES, SPRITES, TEMPLATES):
         folder.mkdir(parents=True, exist_ok=True)
 
@@ -218,7 +288,10 @@ def main():
     make_tile_template(TEMPLATES / "tile_template_128x64.png")
     make_grid_guide(TEMPLATES / "grid_guide_1280x640.png")
     make_palette(TEMPLATES / "palette_deetslife.png")
-    print("Placeholder art written to game/assets/ and art/templates/.")
+    make_dog_template(TEMPLATES / "dog_template_32x32.png")
+    make_dog_strip_template(TEMPLATES / "dog_walk_strip_128x32.png")
+    make_dog_scale_reference(TEMPLATES / "dog_scale_reference.png")
+    print("Done. Existing files were skipped; pass --force to regenerate them.")
 
 
 if __name__ == "__main__":
