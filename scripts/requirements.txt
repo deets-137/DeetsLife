@@ -1,3 +1,0 @@
-# enrich_songs.py / fetch_previews.py use only the Python standard library.
-# make_placeholder_art.py needs Pillow.
-pillow

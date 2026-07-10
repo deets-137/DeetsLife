@@ -77,15 +77,17 @@ DeetsLife/
   scripts/
     enrich_songs.py      # fills previewUrl + artwork via iTunes Search API
     fetch_previews.py    # downloads previews, converts m4a→ogg for Godot (ffmpeg)
-    make_placeholder_art.py  # regenerates the graybox art + templates
+    make_placeholder_art.py  # regenerates the graybox art + templates (skips existing files)
+    derive_dog_frames.py     # dog_up + walk strips, derived from Aditya's side/down idles
   art/
     src/                 # Libresprite working files (.aseprite)
     templates/           # tile template, grid guide, palette strip
     photos/              # Lightroom exports (Git LFS)
   game/                  # the Godot 4 project — open this folder in Godot
     project.godot
-    scenes/              # main.tscn (graybox room), player.tscn
-    scripts/             # room.gd (iso math + room build), player.gd (movement)
+    scenes/              # main.tscn (graybox room), player.tscn, dog.tscn
+    scripts/             # room.gd (iso math + room build), player.gd (movement),
+                         # dog.gd (breadcrumb follower)
     assets/
       tiles/  sprites/   # exported pixel art (placeholders until Aditya's art)
       audio/previews/    # generated oggs (gitignored)
