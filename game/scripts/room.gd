@@ -35,21 +35,16 @@ const SPAWN_TILE := Vector2i(4, 2)  # bottom-right of the entry, on the mat
 ## "half" = footprint half-extent in tiles; "collider_half" = the solid diamond.
 ## Colliders match footprints so the stool edges seal against the table edge —
 ## smaller colliders leave corner pockets the player can wedge into, standing
-## visually inside the furniture. The stools' colliders will toggle off when
-## sitting gets built.
-## "seat_face" marks a prop as sittable: interact nearby snaps the player onto it,
-## facing that tile (the table), with the prop's collider off while occupied.
+## visually inside the furniture.
+## (Sitting on the stools was built and torn out — see BUILD_PLAN § Milestone 0.6;
+## rewind commit 36aaec4 to bring it back.)
 const PROPS := [
 	{ "tex": "mahjong_table", "at": Vector2(-2.0, 1.0), "half": 0.5, "collider_half": 0.5 },
-	{ "tex": "mahjong_chair", "at": Vector2(-2.0, 0.25), "half": 0.25, "collider_half": 0.25, "seat_face": Vector2(-2.0, 1.0) },  # NE seat
-	{ "tex": "mahjong_chair", "at": Vector2(-2.0, 1.75), "half": 0.25, "collider_half": 0.25, "seat_face": Vector2(-2.0, 1.0) },  # SW seat
-	{ "tex": "mahjong_chair", "at": Vector2(-2.75, 1.0), "half": 0.25, "collider_half": 0.25, "seat_face": Vector2(-2.0, 1.0) },  # NW seat
-	{ "tex": "mahjong_chair", "at": Vector2(-1.25, 1.0), "half": 0.25, "collider_half": 0.25, "seat_face": Vector2(-2.0, 1.0) },  # SE seat
+	{ "tex": "mahjong_chair", "at": Vector2(-2.0, 0.25), "half": 0.25, "collider_half": 0.25 },   # NE
+	{ "tex": "mahjong_chair", "at": Vector2(-2.0, 1.75), "half": 0.25, "collider_half": 0.25 },   # SW
+	{ "tex": "mahjong_chair", "at": Vector2(-2.75, 1.0), "half": 0.25, "collider_half": 0.25 },   # NW
+	{ "tex": "mahjong_chair", "at": Vector2(-1.25, 1.0), "half": 0.25, "collider_half": 0.25 },   # SE
 ]
-
-## Interact-to-sit reach: squared, in screen px with y doubled back to iso-fair
-## distance. 80px covers standing in the lane beside a stool, not across the table.
-const SEAT_REACH_SQ := 80.0 * 80.0
 
 ## Wall-hung art: a 64×112 overlay PNG aligned to one wall tile's canvas (same
 ## coordinates as that room's wall texture, transparent except the piece), from
@@ -67,7 +62,6 @@ var _floor_root: Node2D
 var _walkable := {}     # Vector2i(u, v) -> true
 var _blocked_nw := {}   # Vector2i(u, v): wall between (u, v) and (u-1, v)
 var _blocked_ne := {}   # Vector2i(u, v): wall between (u, v) and (u, v-1)
-var _seats := []        # { pos, cs, facing, flip, taken } per seat prop
 
 
 func _ready() -> void:
@@ -199,49 +193,6 @@ func _build_props() -> void:
 		cs.shape = shape
 		body.add_child(cs)
 		add_child(body)
-		if p.has("seat_face"):
-			var f: Array = _facing_toward(p.at, p.seat_face)
-			_seats.append({
-				# +1px past the prop's own Y-sort point so the sitter draws over it.
-				"pos": base + Vector2(0, 1),
-				"cs": cs,
-				"facing": f[0], "flip": f[1],
-				"taken": false,
-			})
-
-
-func _facing_toward(from_t: Vector2, to_t: Vector2) -> Array:
-	# [animation facing, flip_h] for a seat looking toward the table. Every
-	# sitter faces the table center, so seats read as the four diagonals from
-	# just two drawn poses + mirror: sit_down faces down-LEFT (flip for
-	# down-right), sit_up faces up-LEFT (flip for up-right) — same
-	# art-faces-left convention as the side walk art.
-	var d := tile_to_world(to_t.x, to_t.y) - tile_to_world(from_t.x, from_t.y)
-	return ["down" if d.y > 0.0 else "up", d.x > 0.0]
-
-
-func request_seat(from: Vector2) -> Dictionary:
-	## Claim the nearest free seat within reach of `from`, turning its collider
-	## off. Returns {} when none. Caller stands back up via release_seat.
-	var best := {}
-	var best_d := SEAT_REACH_SQ
-	for s in _seats:
-		if s.taken:
-			continue
-		var d: Vector2 = s.pos - from
-		var dist: float = d.x * d.x + (d.y * 2.0) * (d.y * 2.0)
-		if dist < best_d:
-			best_d = dist
-			best = s
-	if not best.is_empty():
-		best.taken = true
-		best.cs.set_deferred("disabled", true)
-	return best
-
-
-func release_seat(seat: Dictionary) -> void:
-	seat.taken = false
-	seat.cs.set_deferred("disabled", false)
 
 
 func _build_collision() -> void:

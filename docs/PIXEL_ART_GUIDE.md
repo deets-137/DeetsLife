@@ -112,24 +112,14 @@ Colliders match the tile footprints exactly, sealing the table + stool cluster i
 solid group (smaller colliders left pockets the player could wedge into). They live in
 `PROPS` in `room.gd` — art changes never touch them.
 
-**Player sit poses:** sitting is wired (E near a stool; the game disables the stool's
-collider and snaps the seated sprite onto it — the node anchors at the stool's south
-corner for Y-sorting, and `SIT_LIFT` in `player.gd` raises the sprite onto the
-cushion). Every
-sitter faces the **center of the table**, so only **two diagonal poses** are drawn and
-the game mirrors them for the right-hand seats — same convention as the side walk art
-(draw facing LEFT):
-
-- `sit_down.png` — seated ¾ view facing **down-left** (toward camera); mirrored for
-  the seat whose table is down-right.
-- `sit_up.png` — seated ¾ view facing **up-left** (away from camera); mirrored for
-  up-right.
-
-The current `deets/sit_down/up.png` are generated drafts still in the old straight-on
-facings — placeholders until the diagonals are drawn (same filenames, drop-in). Seat
-rigs have no `sit_side`. (Happy's `sit_*` poses are unrelated — his idle-sit stays
-cardinal and is final.) New seatable characters get sit poses the same way: derive or
-draw `sit_down/up.png` into their folder.
+**Player sitting: torn out by design.** Sitting at a table was built end to end
+(table-center facing, diagonal poses + mirror, sprite lift onto the cushion) and
+removed: it's too complex to nail to Aditya's standards — the pose/position/Y-sort
+interplay never quite reads right at this sprite scale. **Avoid designing scenarios
+that require sitting at a table**; interactions happen standing (e.g. the mahjong
+game zooms to a tabletop scene instead). The complete working implementation is at
+commit `36aaec4` if it's ever wanted back. Happy's `sit_*` poses are unrelated —
+his idle-sit is hand-drawn, final, and stays.
 
 ## Deriving a character rig
 

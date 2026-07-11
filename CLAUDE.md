@@ -65,13 +65,12 @@ Room C is becoming the mahjong corner: a 1×1 table + four quarter-tile stools
 § Milestone 0.6). Prop colliders match footprints exactly — smaller ones left corner
 pockets the player could wedge into (fixed + verified headless). Three wall-hung
 graybox frames hang in C via `WALL_ART` in room.gd (64×112 per-wall-tile overlays,
-contract in PIXEL_ART_GUIDE § Per-room assets), awaiting Aditya's art. Sitting is
-wired: E (interact) near a free stool snaps the player onto it facing the **center
-of the table** (stool collider off while seated; E or movement stands back up).
-Seats are data — `seat_face` in `PROPS`; all four resolve to diagonals from two
-drawn poses + mirror (`sit_down` = down-left, `sit_up` = up-left, art faces LEFT —
-contract in PIXEL_ART_GUIDE § Props). Deets' sit PNGs are straight-on generated
-drafts standing in until Aditya draws the diagonals. The mahjong game itself (zoomed tabletop scene + 4 buttons) is
+contract in PIXEL_ART_GUIDE § Per-room assets), awaiting Aditya's art. **Sitting
+was built end-to-end and torn out by Aditya's decision — too complex to nail to
+his art standards. Do not design scenarios that require sitting at a table;**
+interactions happen standing (Happy's idle-sit is unrelated and stays). The full
+working implementation is at commit `36aaec4` if it's ever wanted back. The
+mahjong game itself (zoomed tabletop scene + 4 buttons) is
 designed-but-not-started; agreed order: multiplayer walk-together slice next, then
 the mahjong game built multiplayer-native.
 
