@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dokoauwn33rin"
-path="res://.godot/imported/dog_side_walk.png-88fdee7b9d41d21e8dc72e3b1e5bd511.ctex"
+uid="uid://cq33fn3sxxeni"
+path="res://.godot/imported/idle_side.png-740721b31c418e26598bc8cea03189e9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/dog_side_walk.png"
-dest_files=["res://.godot/imported/dog_side_walk.png-88fdee7b9d41d21e8dc72e3b1e5bd511.ctex"]
+source_file="res://assets/sprites/lucky/idle_side.png"
+dest_files=["res://.godot/imported/idle_side.png-740721b31c418e26598bc8cea03189e9.ctex"]
 
 [params]
 

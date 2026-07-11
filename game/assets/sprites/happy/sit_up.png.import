@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dsts5e36mv5r5"
-path="res://.godot/imported/dog_side.png-c6d3e2824be4b496c8686d16d1b1f4fb.ctex"
+uid="uid://do0jyv84kq65g"
+path="res://.godot/imported/sit_up.png-d408a90d693ce60d7671ea71962e5de1.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/dog_side.png"
-dest_files=["res://.godot/imported/dog_side.png-c6d3e2824be4b496c8686d16d1b1f4fb.ctex"]
+source_file="res://assets/sprites/happy/sit_up.png"
+dest_files=["res://.godot/imported/sit_up.png-d408a90d693ce60d7671ea71962e5de1.ctex"]
 
 [params]
 

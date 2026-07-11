@@ -9,9 +9,15 @@ const ARRIVE_EPS := 1.5         # closer than this to the target counts as stopp
 const SIT_DELAY := 0.7          # seconds of standing still before the dog sits
 
 @export var player_path: NodePath
+@export var character := "happy"
 
 @onready var _sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var _player: Node2D = get_node(player_path)
+
+
+func _ready() -> void:
+	_sprite.sprite_frames = CharacterSprites.build(character, { "walk": 9.0 })
+	_sprite.play("idle_down")
 
 var _crumbs: PackedVector2Array = PackedVector2Array()
 var _facing := "down"

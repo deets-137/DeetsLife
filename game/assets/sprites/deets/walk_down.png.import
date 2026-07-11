@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://carxa2w1lgh3u"
-path="res://.godot/imported/dog_sit_down.png-9578baa83e0f3e5ee5c2f78f9e4d2dc2.ctex"
+uid="uid://bow5wut63rxkg"
+path="res://.godot/imported/walk_down.png-e1029da843bb874620a26abb1abc86d4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/dog_sit_down.png"
-dest_files=["res://.godot/imported/dog_sit_down.png-9578baa83e0f3e5ee5c2f78f9e4d2dc2.ctex"]
+source_file="res://assets/sprites/deets/walk_down.png"
+dest_files=["res://.godot/imported/walk_down.png-e1029da843bb874620a26abb1abc86d4.ctex"]
 
 [params]
 

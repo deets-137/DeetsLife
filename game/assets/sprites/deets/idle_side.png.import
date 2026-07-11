@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bv1cqlhs6xcdx"
-path="res://.godot/imported/dog_sit_side.png-c0004ca43b5482d95340f1b702794ffa.ctex"
+uid="uid://b16l0q5pf71jy"
+path="res://.godot/imported/idle_side.png-aeec1f64c0abe4e652bd1977b8ff9bdf.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/dog_sit_side.png"
-dest_files=["res://.godot/imported/dog_sit_side.png-c0004ca43b5482d95340f1b702794ffa.ctex"]
+source_file="res://assets/sprites/deets/idle_side.png"
+dest_files=["res://.godot/imported/idle_side.png-aeec1f64c0abe4e652bd1977b8ff9bdf.ctex"]
 
 [params]
 

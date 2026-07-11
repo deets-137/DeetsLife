@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://xigfwyl7rvuj"
-path="res://.godot/imported/player_side_walk.png-dbed3f146af0d603daff310a27fc85f6.ctex"
+uid="uid://ct0g143u0gfvg"
+path="res://.godot/imported/sit_up.png-07ef23b224937a84f758d51ad463bc03.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/player_side_walk.png"
-dest_files=["res://.godot/imported/player_side_walk.png-dbed3f146af0d603daff310a27fc85f6.ctex"]
+source_file="res://assets/sprites/lucky/sit_up.png"
+dest_files=["res://.godot/imported/sit_up.png-07ef23b224937a84f758d51ad463bc03.ctex"]
 
 [params]
 

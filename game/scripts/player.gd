@@ -4,9 +4,18 @@ extends CharacterBody2D
 
 const SPEED := 260.0
 
+## Which assets/sprites/<character>/ rig this body wears; multiplayer and the
+## character creator will point this at other folders.
+@export var character := "deets"
+
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
 
 var _facing := "down"
+
+
+func _ready() -> void:
+	sprite.sprite_frames = CharacterSprites.build(character)
+	sprite.play("idle_down")
 
 
 func _physics_process(_delta: float) -> void:
