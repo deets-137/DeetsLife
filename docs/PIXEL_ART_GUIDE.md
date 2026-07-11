@@ -112,11 +112,24 @@ Colliders match the tile footprints exactly, sealing the table + stool cluster i
 solid group (smaller colliders left pockets the player could wedge into). They live in
 `PROPS` in `room.gd` — art changes never touch them.
 
-**Planned — player sit poses:** when the next batch of player sprites gets drawn
-(more characters than just the current Aditya caricature), include `sit_down` /
-`sit_up` / `sit_side` per character, same idea as the dog's sit poses. That's the
-art that unlocks sitting at the stools: the game disables the stool's collider and
-snaps the seated sprite onto it.
+**Player sit poses:** sitting is wired (E near a stool; the game disables the stool's
+collider and snaps the seated sprite onto it — the node anchors at the stool's south
+corner for Y-sorting, and `SIT_LIFT` in `player.gd` raises the sprite onto the
+cushion). Every
+sitter faces the **center of the table**, so only **two diagonal poses** are drawn and
+the game mirrors them for the right-hand seats — same convention as the side walk art
+(draw facing LEFT):
+
+- `sit_down.png` — seated ¾ view facing **down-left** (toward camera); mirrored for
+  the seat whose table is down-right.
+- `sit_up.png` — seated ¾ view facing **up-left** (away from camera); mirrored for
+  up-right.
+
+The current `deets/sit_down/up.png` are generated drafts still in the old straight-on
+facings — placeholders until the diagonals are drawn (same filenames, drop-in). Seat
+rigs have no `sit_side`. (Happy's `sit_*` poses are unrelated — his idle-sit stays
+cardinal and is final.) New seatable characters get sit poses the same way: derive or
+draw `sit_down/up.png` into their folder.
 
 ## Deriving a character rig
 

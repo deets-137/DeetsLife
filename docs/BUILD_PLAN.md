@@ -52,9 +52,15 @@ in `room.gd`; art contract in PIXEL_ART_GUIDE § Props.
       contract in PIXEL_ART_GUIDE § Per-room assets.
 - [x] Aditya: draw `mahjong_table.png` + `mahjong_chair.png` over the graybox.
 - [ ] Aditya: draw the three `room_c/art_*.png` framed pieces over the graybox.
-- [ ] Sitting: needs player sit poses (`sit_down/up/side`) — draw them with the next
-      player-sprite batch (more characters than just Aditya's likeness), then wire
-      interact-to-sit: stool collider off, sprite snaps to the seat.
+- [x] Sitting wired end-to-end: E (interact) near a free stool snaps the player onto
+      it facing the table, stool collider off while seated; E or any movement stands
+      back up at the approach spot. Seats are data (`seat_face` in `PROPS`); every
+      sitter faces the table **center** — four diagonal facings from two drawn poses
+      (`sit_down` = down-left, `sit_up` = up-left, mirrored for the right-hand
+      seats). Verified headless.
+- [ ] Aditya: draw the two diagonal sit poses (`deets/sit_down/up.png`, ¾ views
+      facing left — contract in PIXEL_ART_GUIDE § Props). Current PNGs are
+      straight-on generated drafts standing in until then.
 - [ ] The game itself: interact at the table → camera zooms in and a tabletop scene
       opens (mahjong board + 4 action buttons). Separate art project; not started.
 
