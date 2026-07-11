@@ -32,15 +32,27 @@ const SPAWN_TILE := Vector2i(4, 2)  # bottom-right of the entry, on the mat
 ## Props: sprite from assets/props/<tex>.png, bottom-center anchored at the south
 ## corner of a square footprint centered on "at" (fractional tile coords are fine —
 ## the stools sit tucked toward the table, a quarter tile off their tile's center).
-## "half" = footprint half-extent in tiles; "collider_half" = the solid diamond
-## (smaller than the sprite, so walk lanes past a prop stay comfortable).
-## The stools' colliders will toggle off when sitting gets built.
+## "half" = footprint half-extent in tiles; "collider_half" = the solid diamond.
+## Colliders match footprints so the stool edges seal against the table edge —
+## smaller colliders leave corner pockets the player can wedge into, standing
+## visually inside the furniture. The stools' colliders will toggle off when
+## sitting gets built.
 const PROPS := [
-	{ "tex": "mahjong_table", "at": Vector2(-2.0, 1.0), "half": 0.5, "collider_half": 0.45 },
-	{ "tex": "mahjong_chair", "at": Vector2(-2.0, 0.25), "half": 0.25, "collider_half": 0.175 },  # NE seat
-	{ "tex": "mahjong_chair", "at": Vector2(-2.0, 1.75), "half": 0.25, "collider_half": 0.175 },  # SW seat
-	{ "tex": "mahjong_chair", "at": Vector2(-2.75, 1.0), "half": 0.25, "collider_half": 0.175 },  # NW seat
-	{ "tex": "mahjong_chair", "at": Vector2(-1.25, 1.0), "half": 0.25, "collider_half": 0.175 },  # SE seat
+	{ "tex": "mahjong_table", "at": Vector2(-2.0, 1.0), "half": 0.5, "collider_half": 0.5 },
+	{ "tex": "mahjong_chair", "at": Vector2(-2.0, 0.25), "half": 0.25, "collider_half": 0.25 },  # NE seat
+	{ "tex": "mahjong_chair", "at": Vector2(-2.0, 1.75), "half": 0.25, "collider_half": 0.25 },  # SW seat
+	{ "tex": "mahjong_chair", "at": Vector2(-2.75, 1.0), "half": 0.25, "collider_half": 0.25 },  # NW seat
+	{ "tex": "mahjong_chair", "at": Vector2(-1.25, 1.0), "half": 0.25, "collider_half": 0.25 },  # SE seat
+]
+
+## Wall-hung art: a 64×112 overlay PNG aligned to one wall tile's canvas (same
+## coordinates as that room's wall texture, transparent except the piece), from
+## assets/rooms/<room>/<tex>.png. Rendered through the wall-strip pipeline with a
+## tiny sort bias so it draws over the wall but still behind anyone in the room.
+const WALL_ART := [
+	{ "room": "room_c", "tex": "art_nw_left", "tile": Vector2i(-3, 2), "nw": true },   # portrait, west wall left tile
+	{ "room": "room_c", "tex": "art_nw_right", "tile": Vector2i(-3, 0), "nw": true },  # landscape, west wall right tile
+	{ "room": "room_c", "tex": "art_ne_mid", "tile": Vector2i(-2, 0), "nw": false },   # portrait, east wall middle tile
 ]
 
 @onready var _player: CharacterBody2D = $Player
@@ -59,6 +71,7 @@ func _ready() -> void:
 	add_child(_floor_root)
 	for room_name in ROOMS:
 		_build_room(room_name, ROOMS[room_name])
+	_build_wall_art()
 	_build_mat()
 	_build_props()
 	_build_collision()
@@ -123,7 +136,16 @@ func _maybe_add_door(path: String, t: Vector2i, nw: bool) -> void:
 		_add_wall(load(path), t, nw)
 
 
-func _add_wall(tex: Texture2D, t: Vector2i, nw: bool) -> void:
+func _build_wall_art() -> void:
+	# The 0.25px sort bias breaks the Y-sort tie with the wall strips underneath
+	# (art wins) while staying far below any character's feet, which sit several
+	# pixels south of the wall base at minimum.
+	for a in WALL_ART:
+		var tex: Texture2D = load("res://assets/rooms/%s/%s.png" % [a.room, a.tex])
+		_add_wall(tex, a.tile, a.nw, 0.25)
+
+
+func _add_wall(tex: Texture2D, t: Vector2i, nw: bool, sort_bias := 0.0) -> void:
 	# Each wall tile is sliced into vertical strips, each Y-sorted at its own
 	# piece of the sloping base line. One sprite per tile would sort by the base
 	# midpoint, and the base spans 32px of Y — so anything standing near the
@@ -141,6 +163,7 @@ func _add_wall(tex: Texture2D, t: Vector2i, nw: bool) -> void:
 			s.position = Vector2(c.x - 64 + i * w, c.y - strip_mid * 0.5)
 		else:   # base runs from (c.x, c.y-32) down to (c.x+64, c.y)
 			s.position = Vector2(c.x + i * w, c.y - 32 + strip_mid * 0.5)
+		s.position.y += sort_bias
 		s.offset = Vector2(0, (c.y - WALL_PX_H) - s.position.y)
 		add_child(s)
 

@@ -52,9 +52,12 @@ geometry lives in `ROOMS` in `game/scripts/room.gd`.
 
 Room C is becoming the mahjong corner: a 1×1 table + four quarter-tile stools
 (`PROPS` in room.gd, graybox art in `game/assets/props/`, plan in BUILD_PLAN
-§ Milestone 0.6). Sitting waits on player sit poses, which Aditya will draw with the
-next player-sprite batch; the mahjong game itself (zoomed tabletop scene + 4 buttons)
-is designed-but-not-started.
+§ Milestone 0.6). Prop colliders match footprints exactly — smaller ones left corner
+pockets the player could wedge into (fixed + verified headless). Three wall-hung
+graybox frames hang in C via `WALL_ART` in room.gd (64×112 per-wall-tile overlays,
+contract in PIXEL_ART_GUIDE § Per-room assets), awaiting Aditya's art. Sitting waits
+on player sit poses, which Aditya will draw with the next player-sprite batch; the
+mahjong game itself (zoomed tabletop scene + 4 buttons) is designed-but-not-started.
 
 ### The deleted tooling (restore if needed)
 

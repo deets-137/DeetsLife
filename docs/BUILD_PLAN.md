@@ -39,12 +39,19 @@ Aditya directed the layout; built and verified headless.
 
 ## Milestone 0.6 — Mahjong corner in room C 🚧
 
-A 1×1 table on C's center tile, four quarter-tile stools tucked to its sides with
-leg-sized colliders so the room stays walkable. Data-driven in `PROPS` in `room.gd`;
-art contract in PIXEL_ART_GUIDE § Props.
+A 1×1 table on C's center tile, four quarter-tile stools tucked to its sides.
+Colliders match footprints so the stool edges seal against the table (smaller
+colliders left corner pockets the player could wedge into). Data-driven in `PROPS`
+in `room.gd`; art contract in PIXEL_ART_GUIDE § Props.
 
 - [x] Table + stools placed, collided, Y-sorted; walk lanes verified headless.
-- [ ] Aditya: draw `mahjong_table.png` + `mahjong_chair.png` over the graybox.
+- [x] Cluster sealed: colliders bumped to footprint size after the wedge bug;
+      re-verified headless (16-angle push probe + full lap of the table).
+- [x] Wall-hung art plumbing (`WALL_ART` in `room.gd`): three graybox frames in C —
+      portrait + landscape on the NW wall, portrait mid-NE wall. 64×112 overlays,
+      contract in PIXEL_ART_GUIDE § Per-room assets.
+- [x] Aditya: draw `mahjong_table.png` + `mahjong_chair.png` over the graybox.
+- [ ] Aditya: draw the three `room_c/art_*.png` framed pieces over the graybox.
 - [ ] Sitting: needs player sit poses (`sit_down/up/side`) — draw them with the next
       player-sprite batch (more characters than just Aditya's likeness), then wire
       interact-to-sit: stool collider off, sprite snaps to the seat.

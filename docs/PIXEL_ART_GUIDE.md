@@ -68,6 +68,13 @@ Every room owns its art in `game/assets/rooms/<room>/` — `entry`, `room_a`, `r
   same image twice for a plain un-checkered floor.
 - `wall_nw.png` + `wall_ne.png` (64×112) — that room's walls. The hall has no
   `wall_ne` (its north end opens straight into room D).
+- `art_*.png` (64×112, **optional**) — wall-hung pieces (framed art). Each file is an
+  overlay aligned to **one wall tile's canvas**: same coordinates as that wall's
+  texture, transparent everywhere except the piece — draw over a copy of the wall PNG
+  to place it, keeping horizontal edges on the wall's 2:1 slope so it hangs parallel.
+  Which file hangs on which tile is data in `WALL_ART` in `room.gd`. Room C has three
+  graybox frames: `art_nw_left` (portrait), `art_nw_right` (landscape), `art_ne_mid`
+  (portrait).
 - `entry/mat.png` (128×64) — the welcome mat under the spawn tile.
 - `door_nw.png` / `door_ne.png` (64×112, **optional**) — doorframe art. Doorways render
   as bare wall gaps until this file exists in the folder of the room that owns the wall
