@@ -58,6 +58,26 @@ in `room.gd`; art contract in PIXEL_ART_GUIDE § Props.
 - [ ] The game itself: interact at the table → camera zooms in and a tabletop scene
       opens (mahjong board + 4 action buttons). Separate art project; not started.
 
+## Milestone 0.7 — Character pipeline 🚧
+
+Characters are folders of PNGs; new ones need only their idle poses drawn. Feeds the
+two directions Aditya has voiced: simple online multiplayer (P2P, one Discord friend
+hosts, ≤16 players, custom characters shipped as PNG folders on join) and the
+wardrobe / character creator (draw over a template in-game, derivations automated).
+
+- [x] Folder-per-character rigs (`deets/`, `happy/`) + convention loader
+      (`character_sprites.gd`): filename = animation, frame count from strip width.
+- [x] Derivation tool (`tools/derive_character.gd`): idle poses in → walk/sit frames
+      out, colors transferred through a reference rig's hand-drawn animation; part
+      hints (`derive_hints.json`) keep e.g. a tail its own color; never overwrites
+      any file. Proven by `lucky/` (cream dog, beige tail, derived from `happy`).
+- [ ] Multiplayer walk-together slice: host + join + see each other move (authority
+      in player.gd, MultiplayerSpawner, local-only camera, UPnP port open).
+- [ ] Character transfer on join (rig PNGs are a few KB; build SpriteFrames from
+      received buffers).
+- [ ] Wardrobe: in-game station (entry-room corner), template start, import first,
+      pixel editor later. Waits on Aditya's direction for the flow.
+
 ## Milestone 1 — What is this game? (ONGOING)
 
 - [ ] **Aditya defines the new direction** — arriving as concrete build requests

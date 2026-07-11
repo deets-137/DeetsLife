@@ -37,15 +37,25 @@ direction — do NOT treat them as settled or build against them.
 
 The new direction is emerging through concrete build requests rather than a written
 spec — the multi-room map came first. Aditya directs each step; don't assume a subject
-or theme beyond what's actually been built.
+or theme beyond what's actually been built. Two directions he has voiced (chatted
+through, not yet built): **simple online multiplayer** — direct P2P, one Discord
+friend hosts, others join, ≤16 players, custom characters shipped as PNG folders on
+join — and a **wardrobe / character creator** where players hand-draw their character
+from a template and the game derives the animations (the deriver tool below is the
+proven seed of that).
 
 What's actually done and working: the multi-room graybox map (`main.tscn`) — a 5×3
 entry room (spawn + welcome mat at its bottom-right) with three doors on its NE wall
 into two 5×5 rooms (A, B) and a 1×5 hall to a back 5×5 room (D), plus a door on the
-NW wall into a 3×3 room (C, flush with A); the walkable player (real collision:
-segment colliders along walls/floor edges + move_and_slide, camera follows); and the
-dog that trails the player along a
-breadcrumb path and sits when idle. All dog and player art is hand-drawn and final.
+NW wall into a 3×3 room (C, flush with A); the walkable player **Deets** (Aditya's
+caricature; real collision: segment colliders along walls/floor edges +
+move_and_slide, camera follows); and his dog **Happy**, who trails the player along a
+breadcrumb path and sits when idle. Deets' and Happy's art is hand-drawn and final.
+Characters are folders (`assets/sprites/<name>/`, PNGs named after their animation),
+built at load by `scripts/character_sprites.gd`; new rigs need only idle poses drawn —
+`tools/derive_character.gd` derives walk/sit frames through a reference rig's
+animation and **never overwrites an existing file**. `lucky/` (cream dog, beige tail,
+derived from happy) is the proof-of-concept.
 Room floors/walls are graybox, one asset folder per room in `game/assets/rooms/<room>/`
 for Aditya to draw over (specs in docs/PIXEL_ART_GUIDE.md § Per-room assets). Room
 geometry lives in `ROOMS` in `game/scripts/room.gd`.
@@ -69,7 +79,7 @@ git checkout cff5a68 -- scripts/     # the last commit that still had it
 
 | Restore | If you need to |
 |---|---|
-| `derive_dog_frames.py` | redraw `dog_side.png` / `dog_down.png` — it's the only thing that rebuilds `dog_up.png` and the three walk strips from them |
+| `derive_dog_frames.py` | redraw Happy's side/down idles — it's the only thing that rebuilds the up idle and the three walk strips from them (predates the `sprites/happy/` folder move; fix its paths when restoring) |
 | `make_placeholder_art.py` | regenerate graybox tiles or the Libresprite templates in `art/templates/` (the template PNGs themselves are committed, so usually you don't) |
 | `enrich_songs.py`, `fetch_previews.py` | bring music back — iTunes lookup and 30s-preview conversion |
 
@@ -130,12 +140,19 @@ DeetsLife/
     project.godot
     scenes/              # main.tscn (graybox multi-room map), player.tscn, dog.tscn
     scripts/             # room.gd (iso math + map build + walkability), player.gd
-                         # (movement), dog.gd (breadcrumb follower)
+                         # (movement), dog.gd (breadcrumb follower),
+                         # character_sprites.gd (folder → SpriteFrames)
+    tools/               # derive_character.gd — headless deriver: idle poses in,
+                         # walk/sit frames out via a reference rig; never overwrites
     assets/
       rooms/             # per-room floors/walls/doorframes (entry, room_a–d, hall),
-                         # graybox awaiting Aditya's art; entry/ also has mat.png
-      props/             # furniture (mahjong table + stool), graybox awaiting art
-      sprites/           # hand-drawn player + dog PNGs, and the .ase working files
+                         # graybox awaiting Aditya's art; entry/ also has mat.png,
+                         # room_c/ the three wall-art frames
+      props/             # furniture (mahjong table + stool), hand-drawn
+      sprites/           # one folder per character (deets/, happy/, lucky/): PNGs
+                         # named after their animation (idle_down, walk_side, sit_up)
+                         # + .ase files; animations built by character_sprites.gd;
+                         # happy/derive_hints.json marks the tail for the deriver
       audio/previews/    # empty; generated oggs were gitignored
 
   (no scripts/ — deleted once the art was final; restore from cff5a68 if needed)

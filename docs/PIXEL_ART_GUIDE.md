@@ -12,22 +12,26 @@ How to hand-draw DeetsLife's world. Technique only — every style decision is A
 - **Walls are 64×112**: an 80px-tall face whose bottom edge follows one top edge of the
   floor diamond (so the base slopes 2:1 across 64px = 32px of rise). Match any
   `game/assets/rooms/<room>/wall_nw.png` / `wall_ne.png` exactly and new walls drop in.
-- **The player is 32×64**, feet at the bottom-center. Three facings: `player_down`
-  (toward camera), `player_up` (away), `player_side` (LEFT — the game mirrors it for
+- **A character is a folder**: `game/assets/sprites/<name>/` (`deets/`, `happy/`,
+  `lucky/`), with PNGs named exactly after the animation they become — `idle_down.png`,
+  `walk_side.png`, `sit_up.png`. The game builds animations from whatever files exist
+  (`scripts/character_sprites.gd`), so a new character = a new folder, zero code, and a
+  sparse rig (an NPC who only sits) is fine. `.ase` working files live in the folder too.
+- **New characters need only the idle poses drawn** — walk strips and sits derive from
+  a finished reference rig (see § Deriving a character rig below).
+- **Deets is 32×64**, feet at the bottom-center. Three facings: `idle_down`
+  (toward camera), `idle_up` (away), `idle_side` (LEFT — the game mirrors it for
   right). Keep the caricature's feet in the bottom ~4 rows so it sits on tiles correctly.
-  These three are the **idle/standing** poses.
-- **Walk cycles are horizontal strips**: `player_down_walk.png`, `player_up_walk.png`,
-  `player_side_walk.png` — each frame exactly 32×64, laid side by side (4 frames =
-  128×64). Frame order is step-A → passing → step-B → passing. Keep the body from
+- **Walk cycles are horizontal strips**: `walk_down.png`, `walk_up.png`,
+  `walk_side.png` — each frame exactly the idle's size, laid side by side (4 frames of
+  32×64 = 128×64). Frame order is step-A → passing → step-B → passing. Keep the body from
   drifting sideways between frames or the walk reads as sliding; flip through the
   Libresprite timeline to check. In Libresprite: draw the frames in the timeline, then
   *File → Export Sprite Sheet* as a **horizontal strip**.
-- **The dog is 32×32**, paws on the bottom row, bottom-center anchored — same three
-  facings as the player: `dog_down`, `dog_up`, `dog_side` (LEFT; the game mirrors it).
-  Plus three **sit poses** — `dog_sit_down`, `dog_sit_up`, `dog_sit_side` — shown when
-  the dog has been standing still for 0.7s. Its **walk strips** are `dog_down_walk.png`,
-  `dog_up_walk.png`, `dog_side_walk.png`: 4 frames of 32×32 = 128×32, same step-A →
-  passing → step-B → passing order. Nine PNGs total.
+- **Happy is 32×32**, paws on the bottom row, bottom-center anchored — same three
+  idle facings, plus three **sit poses** (`sit_down`, `sit_up`, `sit_side`) shown when
+  the dog has been standing still for 0.7s, and three walk strips (4 frames of 32×32 =
+  128×32, same step-A → passing → step-B → passing order). Nine PNGs total.
   All nine are **hand-drawn and final.**
   - Draw over `art/templates/dog_template_32x32.png` (center line + feet zone) and
     `art/templates/dog_walk_strip_128x32.png` (the 4 cells). The sit poses have their own
@@ -38,14 +42,16 @@ How to hand-draw DeetsLife's world. Technique only — every style decision is A
     tile so you can judge proportions in context — the poodle stands about knee-high.
   - `art/templates/dog_palette.png` is the dog's exact colors, one pixel each. Open it and
     *Palette → Create palette from current sprite* to draw in-palette.
-  - **If you redraw `dog_side.png` or `dog_down.png`, restore the deriver first:**
+  - **If you redraw Happy's `idle_side.png` or `idle_down.png`, restore the deriver
+    first** (note: it predates the per-character folders — it expects the old
+    `sprites/dog_*.png` names, so update its paths or copy files through):
 
     ```bash
     git checkout cff5a68 -- scripts/
-    python scripts/derive_dog_frames.py     # never writes dog_side.png / dog_down.png
+    python scripts/derive_dog_frames.py     # never writes the side/down idles
     ```
 
-    `derive_dog_frames.py` rebuilds `dog_up` and all three walk strips out of those two
+    `derive_dog_frames.py` rebuilds the up idle and all three walk strips out of those two
     idles by moving your own pixels, so the palette and style stay yours. It finds the legs
     on its own (the hip is the first row below which the silhouette splits into two column
     runs), strides them in opposition for the side view, lifts one paw per step for the
@@ -102,14 +108,42 @@ The mahjong set (room C, graybox until drawn):
   keep it rotationally symmetric; if it grows a directional back, flag it and it
   becomes `_down`/`_up`/`_side` variants like the player facings.
 
-Colliders are deliberately smaller than the sprites (the stool's legs, an inset table
-diamond) and live in `PROPS` in `room.gd` — art changes never touch them.
+Colliders match the tile footprints exactly, sealing the table + stool cluster into one
+solid group (smaller colliders left pockets the player could wedge into). They live in
+`PROPS` in `room.gd` — art changes never touch them.
 
 **Planned — player sit poses:** when the next batch of player sprites gets drawn
 (more characters than just the current Aditya caricature), include `sit_down` /
 `sit_up` / `sit_side` per character, same idea as the dog's sit poses. That's the
 art that unlocks sitting at the stools: the game disables the stool's collider and
 snaps the seated sprite onto it.
+
+## Deriving a character rig
+
+New characters don't need their animation drawn — only their **idle poses**. The
+deriver transfers the new character's colors through a finished reference rig's
+hand-drawn frames, so it never invents anatomy (that's what made the first
+dog-deriver's output look off). Proven by `lucky/`: three recolored idles in, all six
+walk/sit files out, tail correctly beige throughout.
+
+1. Make `game/assets/sprites/<name>/` and draw `idle_down.png` (+ `idle_side.png`,
+   `idle_up.png`) **over the reference's idles**, keeping the silhouette — recolor and
+   redetail freely inside it. Facings you skip are skipped.
+2. From `game/`, run:
+
+   ```bash
+   godot --headless --path . --script res://tools/derive_character.gd -- <name> [reference]
+   ```
+
+   The reference defaults to `happy`; use a human rig as reference for human
+   characters once one has finished animations.
+3. Touch up any derived PNG you dislike — **the tool never overwrites an existing
+   file**, so edits (and your hand-drawn sources) are safe from regeneration. Delete a
+   derived file to re-derive it.
+
+Distinctly-colored moving parts (Happy's tail) are declared once per reference rig in
+its `derive_hints.json` — part pixels only borrow colors from that part. If a new
+reference rig gains such a part, add its rects there.
 
 ## Libresprite workflow
 
@@ -134,16 +168,13 @@ snaps the seated sprite onto it.
   scale sprites by non-integer factors in-scene.
 - Placeholder art is drop-in replaceable: **keep the same filename and size** and the
   game picks it up with zero code changes.
-- The player is an `AnimatedSprite2D` with six animations — `idle_down/up/side` (the
-  single-frame poses) and `walk_down/up/side` (the strips, sliced into 32×64 atlas
-  regions in `game/scenes/player.tscn`), walking at 7 fps. Redrawing a strip with the
-  **same frame count** needs no code change; changing the frame count means updating
-  the atlas regions in `player.tscn` — flag it and I'll adjust.
-- The dog is the same idea in `game/scenes/dog.tscn`: nine animations
-  (`idle_*`, `walk_*`, `sit_*`), 32×32 atlas regions, walking at 9 fps — a bit quicker
-  than the player, since a small dog takes shorter steps. Say the word and I'll retime it.
-  `game/scripts/dog.gd` makes it trail the player along a breadcrumb path, so it follows
-  where you actually walked rather than cutting corners.
+- Characters are `AnimatedSprite2D`s whose animations are built at load by
+  `scripts/character_sprites.gd` from the character's folder — even the frame count is
+  read from the strip width, so redrawing a strip with **any** frame count needs no
+  code change. Deets walks at 7 fps; Happy at 9 — a bit quicker, since a small dog
+  takes shorter steps (say the word and I'll retime either).
+  `game/scripts/dog.gd` makes the dog trail the player along a breadcrumb path, so it
+  follows where you actually walked rather than cutting corners.
 
 ## Photos in the world
 
