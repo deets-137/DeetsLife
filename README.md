@@ -1,5 +1,7 @@
 # DeetsLife
 
+![Graybox preview of the isometric world](docs/graybox-preview.png)
+
 Interactive isometric pixel-art game. Ships as desktop builds (Windows + macOS).
 
 > **The vision is being reworked.** It started as a walkable, gamified museum of the music
@@ -36,3 +38,7 @@ Most likely reason to: `derive_dog_frames.py` is the only thing that rebuilds
 Happy's up idle and three walk strips from the two hand-drawn idles, so restore it
 before redrawing `sprites/happy/idle_side.png` or `idle_down.png` (it predates the
 per-character folders — fix its paths when restoring).
+
+## License
+
+[MIT](LICENSE).
